@@ -1,0 +1,11 @@
+use_frameworks!
+
+target 'AKDataSync_Example' do
+  pod 'AKDataSync', :path => '../'
+
+  target 'AKDataSync_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end
