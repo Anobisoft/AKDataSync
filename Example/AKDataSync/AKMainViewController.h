@@ -1,5 +1,5 @@
 //
-//  AKViewController.h
+//  AKMainViewController.h
 //  AKDataSync
 //
 //  Created by anobisoft on 08/08/2017.
@@ -8,6 +8,6 @@
 
 @import UIKit;
 
-@interface AKViewController : UIViewController
+@interface AKMainViewController : UIViewController
 
 @end

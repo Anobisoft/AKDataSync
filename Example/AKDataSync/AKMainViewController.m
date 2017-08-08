@@ -1,18 +1,18 @@
 //
-//  AKViewController.m
+//  AKMainViewController.m
 //  AKDataSync
 //
 //  Created by anobisoft on 08/08/2017.
 //  Copyright (c) 2017 anobisoft. All rights reserved.
 //
 
-#import "AKViewController.h"
+#import "AKMainViewController.h"
 
-@interface AKViewController ()
+@interface AKMainViewController ()
 
 @end
 
-@implementation AKViewController
+@implementation AKMainViewController
 
 - (void)viewDidLoad
 {
