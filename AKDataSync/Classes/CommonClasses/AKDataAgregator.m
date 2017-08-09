@@ -50,7 +50,7 @@
         self.watchConnector = (id<AKWatchConnector>)AKWatchConnector.sharedInstance;
         [self.watchConnector setAgregator:self];
         watchContextSet = [NSMutableSet new];
-#warning UNCOMPLETED reload "replication needed" status
+//#warning UNCOMPLETED reload "replication needed" status
 #if TARGET_OS_IOS
         cloudManagers[AKDatabaseScopeDefault] = cloudManagers[AKDatabaseScopePrivate] = [NSMutableDictionary new];
         cloudManagers[AKDatabaseScopePublic] = [NSMutableDictionary new];
@@ -82,7 +82,7 @@
 }
 
 - (void)watchConnectorGetReady:(id<AKWatchConnector>)connector {
-#warning UNCOMPLETED Start full replication if connector ready and replication needed.
+//#warning UNCOMPLETED Start full replication if connector ready and replication needed.
 }
 
 - (void)watchConnector:(AKWatchConnector *)connector didRecieveTransaction:(id<AKRepresentableTransaction>)transaction {
@@ -101,7 +101,7 @@
 - (void)addWatchSynchronizableContext:(id<AKDataSyncContextPrivate>)context {
     [watchContextSet addObject:context];
     [context setAgregator:self];
-#warning UNCOMPLETED Start full replication if connector ready and replication needed.
+//#warning UNCOMPLETED Start full replication if connector ready and replication needed.
 }
 
 #if TARGET_OS_IOS

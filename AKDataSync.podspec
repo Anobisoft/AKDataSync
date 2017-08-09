@@ -18,7 +18,7 @@ Pod::Spec.new do |s|
 s.name             = 'AKDataSync'
 s.version          = '0.0.1'
 
-s.summary          = 'A short description of AKDataSync.'
+s.summary          = 'AKDataSync - Automated CoreData synchronization with iCloud'
 
 # This description is used to generate tags and improve search results.
 #   * Think: What does it do? Why did you write it? What is the focus?
@@ -95,7 +95,7 @@ s.source       = { :git => "https://github.com/Anobisoft/AKDataSync.git", :tag =
 
 s.source_files  = "AKDataSync/Classes/*.{h,m}", "AKDataSync/Classes/**/*.{h,m}"
 # s.public_header_files = "Classes/*.h", "Classes/**/*.{h,m}"
-s.exclude_files = "Classes/Deprecated/*"
+s.exclude_files = "AKDataSync/Classes/Deprecated/*"
 
 
 # ――― Resources ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
@@ -107,7 +107,7 @@ s.exclude_files = "Classes/Deprecated/*"
 #
 
 # s.resource  = "icon.png"
-s.resources = "AKDataSync/Resources/*.plist"
+# s.resources = "AKDataSync/Resources/*.plist"
 
 # s.preserve_paths = "FilesToSave", "MoreFilesToSave"
 
