@@ -95,7 +95,7 @@ s.source       = { :git => "https://github.com/Anobisoft/AKDataSync.git", :tag =
 
 s.source_files  = "AKDataSync/Classes/*.{h,m}", "AKDataSync/Classes/**/*.{h,m}"
 # s.public_header_files = "Classes/*.h", "Classes/**/*.{h,m}"
-s.exclude_files = "Classes/Deprecated"
+s.exclude_files = "Classes/Deprecated/*"
 
 
 # ――― Resources ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
