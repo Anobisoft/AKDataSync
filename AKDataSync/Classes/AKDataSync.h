@@ -10,6 +10,7 @@
 
 #import "AKManagedObjectContext.h"
 #import "AKPublicProtocol.h"
+#import "AKTypes.h"
 #import "AKWatchConnector.h"
 #import "NSManagedObject+AKDataSync.h"
 #import "AKReference.h"

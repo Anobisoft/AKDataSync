@@ -8,7 +8,7 @@
 
 
 #import "AKCloudManager.h"
-
+#import "AKTypes.h"
 #import "AKDeviceList.h"
 #import "AKPrivateProtocol.h"
 #import "NSUUID+AnobiKit.h"
@@ -109,21 +109,21 @@ NSMutableDictionary *maxCloudModificationDateForEntityMutable;
 static NSMutableDictionary<NSString *, id> *instances[4];
 + (void)initialize {
     [super initialize];
-    instances[AKDatabaseScopeDefault] = instances[CKDatabaseScopePrivate] = [NSMutableDictionary new];
-    instances[CKDatabaseScopePublic] = [NSMutableDictionary new];
-    instances[CKDatabaseScopeShared] = [NSMutableDictionary new];
+    instances[AKDatabaseScopeDefault] = instances[AKDatabaseScopePrivate] = [NSMutableDictionary new];
+    instances[AKDatabaseScopePublic] = [NSMutableDictionary new];
+    instances[AKDatabaseScopeShared] = [NSMutableDictionary new];
 }
 
 + (instancetype)instanceWithContainerIdentifier:(NSString *)identifier databaseScope:(AKDatabaseScope)databaseScope {
     id instance = [instances[databaseScope % 4] objectForKey:identifier];
     if (!instance) {
-        instance = [[self alloc] initWithContainerIdentifier:identifier databaseScope:(CKDatabaseScope)databaseScope];
+        instance = [[self alloc] initWithContainerIdentifier:identifier databaseScope:databaseScope];
         [instances[databaseScope % 4] setObject:instance forKey:identifier];
     }    
     return instance;
 }
 
-- (instancetype)initWithContainerIdentifier:(NSString *)identifier databaseScope:(CKDatabaseScope)databaseScope {
+- (instancetype)initWithContainerIdentifier:(NSString *)identifier databaseScope:(AKDatabaseScope)databaseScope {
     if (self = [super init]) {
         primaryInitializationGroup = dispatch_group_create();
         lockCloudGroup = dispatch_group_create();
@@ -141,11 +141,11 @@ static NSMutableDictionary<NSString *, id> *instances[4];
         
         NSString *dbScopeString;
         switch (databaseScope) {
-            case CKDatabaseScopePublic:
+            case AKDatabaseScopePublic:
                 db = container.publicCloudDatabase;
                 dbScopeString = @"Public";
                 break;
-            case CKDatabaseScopeShared:
+            case AKDatabaseScopeShared:
                 db = container.sharedCloudDatabase;
                 dbScopeString = @"Shared";
                 break;

@@ -15,13 +15,6 @@
 #ifndef AKPublicProtocol_h
 #define AKPublicProtocol_h
 
-typedef NS_ENUM(NSInteger, AKDatabaseScope) {
-    AKDatabaseScopeDefault = 0,
-    AKDatabaseScopePublic,
-    AKDatabaseScopePrivate,
-    AKDatabaseScopeShared,
-};
-
 NS_ASSUME_NONNULL_BEGIN
 
 
