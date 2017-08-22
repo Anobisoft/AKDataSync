@@ -7,8 +7,10 @@
 //
 
 #import <CoreData/CoreData.h>
+#import "AKTypes.h"
 #import "AKPublicProtocol.h"
 #import "NSManagedObject+AKDataSync.h"
+
 
 #define ASC ascending:true
 #define DESC ascending:false

@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "AKPublicProtocol.h"
+#import "AKTypes.h"
 
 @protocol AKDataSyncContextPrivate, AKCloudMappingProvider;
 
