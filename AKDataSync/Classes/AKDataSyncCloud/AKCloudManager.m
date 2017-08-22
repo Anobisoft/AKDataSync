@@ -8,7 +8,7 @@
 
 
 #import "AKCloudManager.h"
-#import "AKTypes.h"
+#import "AKDataSyncTypes.h"
 #import "AKDeviceList.h"
 #import "AKPrivateProtocol.h"
 #import "NSUUID+AnobiKit.h"

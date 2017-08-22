@@ -7,7 +7,7 @@
 //
 
 #import <CoreData/CoreData.h>
-#import "AKTypes.h"
+#import "AKDataSyncTypes.h"
 #import "AKPublicProtocol.h"
 #import "NSManagedObject+AKDataSync.h"
 

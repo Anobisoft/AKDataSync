@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "AKCloudMapping.h"
-#import "AKTypes.h"
+#import "AKDataSyncTypes.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

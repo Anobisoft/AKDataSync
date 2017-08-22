@@ -1,13 +1,13 @@
 //
-//  AKTypes.h
+//  AKDataSyncTypes.h
 //  Pods
 //
 //  Created by Stanislav Pletnev on 22.08.17.
 //
 //
 
-#ifndef AKTypes_h
-#define AKTypes_h
+#ifndef AKDataSyncTypes_h
+#define AKDataSyncTypes_h
 
 typedef NS_ENUM(NSInteger, AKDatabaseScope) {
     AKDatabaseScopeDefault = 0,
@@ -16,4 +16,4 @@ typedef NS_ENUM(NSInteger, AKDatabaseScope) {
     AKDatabaseScopeShared,
 };
 
-#endif /* AKTypes_h */
+#endif /* AKDataSyncTypes_h */
