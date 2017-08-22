@@ -14,7 +14,7 @@
 #import "NSManagedObject+AKDataSync.h"
 #import "AKReference.h"
 
-//#pragma mark - AnobiKit
-//
-//#import "NSManagedObjectContext+AnobiKit.h"
-//#import "NSUUID+AnobiKit.h"
+#pragma mark - AnobiKit
+
+#import <NSManagedObjectContext+AnobiKit.h>
+#import <NSUUID+AnobiKit.h>

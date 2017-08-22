@@ -16,6 +16,29 @@
 
 //#import <UIKit/UIKit.h>
 
+#import <objc/runtime.h>
+
+@implementation NSManagedObject(swentityName)
+
++ (NSString *)swentityName {
+    NSString *atatentity;
+    @try {
+        atatentity = [self swentityName];
+    } @catch (NSException *exception) {
+        NSLog(@"[ERROR] %s %@", __PRETTY_FUNCTION__, exception);
+    } @finally {
+        if (atatentity) {
+            return atatentity;
+        } else {
+            NSLog(@"[ERROR] %s return null. WTF?! swizzle return className: %@", __PRETTY_FUNCTION__, NSStringFromClass(self.class));
+            return NSStringFromClass(self.class);
+        }
+    }
+}
+
+@end
+
+
 @interface FoundObjectWithRelationRepresentation : NSObject
 
 @property (nonatomic, strong) NSObject <AKRelatableToOne> *recievedRelationsToOne;
@@ -51,6 +74,32 @@
     id<AKCloudManager> ownedCloudManager;
 #endif
 }
+
++ (void)swixManagedObjectEntityNameMethod {
+    Class class = [NSManagedObject class];
+    
+    SEL originalSelector = @selector(entityName);
+    SEL swizzledSelector = @selector(swentityName);
+    
+    Method originalMethod = class_getClassMethod(class, originalSelector);
+    Method swizzledMethod = class_getClassMethod(class, swizzledSelector);
+    
+    BOOL didAddMethod =
+    class_addMethod(class,
+                    originalSelector,
+                    method_getImplementation(swizzledMethod),
+                    method_getTypeEncoding(swizzledMethod));
+    
+    if (didAddMethod) {
+        class_replaceMethod(class,
+                            swizzledSelector,
+                            method_getImplementation(originalMethod),
+                            method_getTypeEncoding(originalMethod));
+    } else {
+        method_exchangeImplementations(originalMethod, swizzledMethod);
+    }
+}
+
 
 @synthesize delegate = _delegate;
 
@@ -459,6 +508,11 @@
 
 + (instancetype)new {
     return [self defaultContext];
+}
+
++ (void)initialize {
+    [super initialize];
+    [self swixManagedObjectEntityNameMethod];
 }
 
 + (instancetype)defaultContext {

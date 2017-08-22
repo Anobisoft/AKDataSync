@@ -1,0 +1,19 @@
+PODS:
+  - AKDataSync (0.0.2):
+    - AnobiKit (~> 0.0.14)
+  - AnobiKit (0.0.14)
+
+DEPENDENCIES:
+  - AKDataSync (from `../`)
+
+EXTERNAL SOURCES:
+  AKDataSync:
+    :path: ../
+
+SPEC CHECKSUMS:
+  AKDataSync: b208778e3e0ae0f5c3b9c2f2eada277769f676fc
+  AnobiKit: 055d1b50fef019fb37eabeb3229523299331ba55
+
+PODFILE CHECKSUM: f35d76121957575eeada9313df5593f8aae756ae
+
+COCOAPODS: 1.3.1
