@@ -24,7 +24,7 @@ s.platform     = :ios, "9.3"
 
 s.source       = { :git => "https://github.com/Anobisoft/AKDataSync.git", :tag => "v#{s.version}" }
 s.source_files  = "AKDataSync/Classes/*.{h,m}", "AKDataSync/Classes/**/*.{h,m}"
-s.public_header_files = "Classes/Public/*.h", "Classes/Public/**/*.{h,m}"
+s.public_header_files = "AKDataSync/Classes/Public/*.h"
 s.exclude_files = "AKDataSync/Classes/Deprecated/*"
 # s.resource  = "icon.png"
 # s.resources = "AKDataSync/Resources/*.plist"
