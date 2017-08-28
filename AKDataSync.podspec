@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
 s.name             = 'AKDataSync'
-s.version          = '0.0.5'
+s.version          = '0.0.6'
 s.summary          = 'AKDataSync - Automated CoreData synchronization with iCloud'
 s.description      = <<-DESC
 TODO: Add long description of the pod here.
