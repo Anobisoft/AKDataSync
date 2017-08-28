@@ -189,17 +189,19 @@
     if (!cloudMapping) {
         cloudMapping = [AKCloudMapping new];
         for (NSEntityDescription *entity in managedObjectModel.entities) {
-            Class class = NSClassFromString([entity managedObjectClassName]);
-            if ([class conformsToProtocol:@protocol(AKMappedObject)]) {
-                if ([class respondsToSelector:@selector(recordType)]) {
-                    Class <AKMappedObject> mappedObjectClass = class;
-                    NSString *recordType = [mappedObjectClass recordType];
-                    if (![recordType isEqualToString:entity.name]) {
-                        [cloudMapping mapRecordType:recordType withEntityName:entity.name];
-                        continue;
+            if (!entity.isAbstract) {
+                Class class = NSClassFromString([entity managedObjectClassName]);
+                if ([class conformsToProtocol:@protocol(AKMappedObject)]) {
+                    if ([class respondsToSelector:@selector(recordType)]) {
+                        Class <AKMappedObject> mappedObjectClass = class;
+                        NSString *recordType = [mappedObjectClass recordType];
+                        if (![recordType isEqualToString:entity.name]) {
+                            [cloudMapping mapRecordType:recordType withEntityName:entity.name];
+                            continue;
+                        }
                     }
+                    [cloudMapping addEntity:entity.name];
                 }
-                [cloudMapping addEntity:entity.name];
             }
         }
     }
