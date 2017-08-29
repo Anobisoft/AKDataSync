@@ -1,5 +1,5 @@
 PODS:
-  - AKDataSync (0.0.7):
+  - AKDataSync (0.0.9):
     - AnobiKit (~> 0.0.14)
   - AnobiKit (0.0.15)
 
@@ -11,7 +11,7 @@ EXTERNAL SOURCES:
     :path: ../
 
 SPEC CHECKSUMS:
-  AKDataSync: 11dd67734d795475a7a9dee8d3f36ba285abf7cb
+  AKDataSync: 19cf26695150d1a5428482475573e91220f1013e
   AnobiKit: c575ebadc821146bb921ca959c8a58a2a0590251
 
 PODFILE CHECKSUM: f35d76121957575eeada9313df5593f8aae756ae

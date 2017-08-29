@@ -56,7 +56,7 @@
 @end
 
 @protocol AKCloudManagerOwner <NSObject>
-@property (weak) id<AKCloudManager> cloudManager;
+@property (strong) id<AKCloudManager> cloudManager;
 - (AKCloudMapping *)cloudMapping;
 @end
 #endif

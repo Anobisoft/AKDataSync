@@ -28,6 +28,21 @@
 #import <AnobiKit/NSDate+AnobiKit.h>
 
 
+@interface NSMapTable<KeyType, ObjectType> (ASKeyedSubscripted)
+- (ObjectType)objectForKeyedSubscript:(KeyType <NSCopying>)key;
+- (void)setObject:(ObjectType)obj forKeyedSubscript:(KeyType <NSCopying>)key;
+@end
+
+@implementation NSMapTable (ASKeyedSubscripted)
+- (id)objectForKeyedSubscript:(id)key {
+    return [self objectForKey:key];
+}
+- (void)setObject:(id)obj forKeyedSubscript:(id)key {
+    [self setObject:obj forKey:key];
+}
+@end
+
+
 typedef void (^FetchRecord)(__kindof CKRecord *record);
 typedef void (^FetchRecordsArray)(NSArray <__kindof CKRecord *> *records);
 
@@ -111,14 +126,14 @@ NSMutableDictionary *maxCloudModificationDateForEntityMutable;
     return self;
 }
 
-static NSMutableDictionary<NSString *, id> *instances[4];
-static NSMutableDictionary<NSString *, id> *instancesByConfig;
+static NSMapTable<NSString *, id> *instances[4];
+static NSMapTable<NSString *, id> *instancesByConfig;
 + (void)initialize {
     [super initialize];
-    instances[AKDatabaseScopeDefault] = instances[AKDatabaseScopePrivate] = [NSMutableDictionary new];
-    instances[AKDatabaseScopePublic] = [NSMutableDictionary new];
-    instances[AKDatabaseScopeShared] = [NSMutableDictionary new];
-    instancesByConfig = [NSMutableDictionary new];
+    instances[AKDatabaseScopeDefault] = instances[AKDatabaseScopePrivate] = [NSMapTable weakToWeakObjectsMapTable];
+    instances[AKDatabaseScopePublic] = [NSMapTable weakToWeakObjectsMapTable];
+    instances[AKDatabaseScopeShared] = [NSMapTable weakToWeakObjectsMapTable];
+    instancesByConfig = [NSMapTable strongToWeakObjectsMapTable];
 }
 
 + (instancetype)instanceWithContainerIdentifier:(NSString *)identifier databaseScope:(AKDatabaseScope)databaseScope {
