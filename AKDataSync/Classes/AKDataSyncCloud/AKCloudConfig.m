@@ -88,10 +88,10 @@ static NSDictionary<NSString *, NSNumber *> *keyedAKDatabaseScope;
 
 
 + (instancetype)configWithName:(NSString *)configName {
-    id instance = instancesByName[configName];
+    id instance = instancesByName[configName ?: @"AKDataSyncDefaultKey"];
     if (!instance) {
         instance = [[self alloc] initWithName:configName];
-        instancesByName[configName] = instance;
+        instancesByName[configName ?: @"AKDataSyncDefaultKey"] = instance;
     }
     return instance;
 }

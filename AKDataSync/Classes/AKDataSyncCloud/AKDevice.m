@@ -15,13 +15,15 @@
 
 @end
 
-@implementation AKDevice
-
-+ (instancetype)deviceWithMappedObject:(id <AKMappedObject>)mappedObject {
-    return [[self alloc] initWithMappedObject:mappedObject];
+@implementation AKDevice {
+    __weak AKCloudConfig *config;
 }
 
-- (instancetype)initWithMappedObject:(id <AKMappedObject>)mappedObject {
++ (instancetype)deviceWithMappedObject:(id <AKMappedObject>)mappedObject config:(AKCloudConfig *)config {
+    return [[self alloc] initWithMappedObject:mappedObject config:config];
+}
+
+- (instancetype)initWithMappedObject:(id <AKMappedObject>)mappedObject config:(AKCloudConfig *)config {
     if (self = [super initWithMappedObject:mappedObject]) {
         
     }
@@ -49,7 +51,7 @@
 }
 
 - (NSString *)entityName {
-    return [self.class entityName];
+    return config.deviceRecordType;
 }
 
 @end

@@ -9,11 +9,16 @@
 #import <Foundation/Foundation.h>
 #import "AKDevice.h"
 
+@class AKCloudConfig;
+
 @interface AKDeviceList : NSObject <NSFastEnumeration>
 
 - (AKDevice *)thisDevice;
 - (void)addDevice:(AKDevice *)device;
 - (NSArray <AKDevice *> *)devices;
++ (instancetype)listWithConfig:(AKCloudConfig *)config;
 
++ (instancetype)new NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
 
 @end

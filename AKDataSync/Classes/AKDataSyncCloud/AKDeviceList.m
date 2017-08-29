@@ -22,10 +22,11 @@ NSString* machine()
 
 @implementation AKDeviceList {
     NSMutableDictionary *mutableStore;
+    AKDevice *thisDevice;
 }
 
 static NSString *thisDeviceVersion;
-static AKDevice *thisDevice;
+
 + (void)initialize {
     [super initialize];
     thisDeviceVersion = [@{@"iPod5,1"    : @"iPod Touch 5",
@@ -83,47 +84,54 @@ static AKDevice *thisDevice;
                            @"i386"       : @"Simulator",
                            @"x86_64"     : @"Simulator",
                            } objectForKey: machine()];
-    thisDevice = [AKDevice new];
 
-    thisDevice.UUIDString = [self uniqueDeviceIdentifier];
 }
 
-+ (NSString *)uniqueDeviceIdentifier {
-    NSString *uniqueDeviceIdentifier;
-    NSMutableDictionary *keychainItem = [NSMutableDictionary dictionaryWithDictionary:
-                                         @{(__bridge id)kSecClass : (__bridge id)kSecClassInternetPassword,
-                                           (__bridge id)kSecAttrAccessible : (__bridge id)kSecAttrAccessibleWhenUnlocked,
-                                           (__bridge id)kSecAttrServer : [NSBundle mainBundle].bundleIdentifier,
-                                           (__bridge id)kSecAttrAccount : @"UniqueDeviceIdentifier",
-                                           (__bridge id)kSecReturnData : (__bridge id)kCFBooleanTrue,
-                                           (__bridge id)kSecReturnAttributes : (__bridge id)kCFBooleanTrue
-                                           }];
-    
-    CFDictionaryRef result = nil;
-    OSStatus sts = SecItemCopyMatching((__bridge CFDictionaryRef)keychainItem, (CFTypeRef *)&result);
-    
-    if (sts) NSLog(@"[WARNING] Load UniqueDeviceIdentifier Error: %d", (int)sts);
-    
-    if (sts == noErr) {
-        NSDictionary *resultDict = (__bridge_transfer NSDictionary *)result;
-        NSData *pswd = resultDict[(__bridge id)kSecValueData];
-        uniqueDeviceIdentifier = [[NSString alloc] initWithData:pswd encoding:NSUTF8StringEncoding];
-    } else {
-        uniqueDeviceIdentifier = [UIDevice currentDevice].identifierForVendor.UUIDString;
+- (NSString *)uniqueDeviceIdentifier {
+    static NSString *uniqueDeviceIdentifier = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSMutableDictionary *keychainItem = [NSMutableDictionary dictionaryWithDictionary:
+                                             @{(__bridge id)kSecClass : (__bridge id)kSecClassInternetPassword,
+                                               (__bridge id)kSecAttrAccessible : (__bridge id)kSecAttrAccessibleWhenUnlocked,
+                                               (__bridge id)kSecAttrServer : [NSBundle mainBundle].bundleIdentifier,
+                                               (__bridge id)kSecAttrAccount : @"UniqueDeviceIdentifier",
+                                               (__bridge id)kSecReturnData : (__bridge id)kCFBooleanTrue,
+                                               (__bridge id)kSecReturnAttributes : (__bridge id)kCFBooleanTrue
+                                               }];
+        
+        CFDictionaryRef result = nil;
+        OSStatus sts = SecItemCopyMatching((__bridge CFDictionaryRef)keychainItem, (CFTypeRef *)&result);
+        
+        if (sts) NSLog(@"[WARNING] Load UniqueDeviceIdentifier Error: %d", (int)sts);
+        
+        if (sts == noErr) {
+            NSDictionary *resultDict = (__bridge_transfer NSDictionary *)result;
+            NSData *pswd = resultDict[(__bridge id)kSecValueData];
+            uniqueDeviceIdentifier = [[NSString alloc] initWithData:pswd encoding:NSUTF8StringEncoding];
+        } else {
+            uniqueDeviceIdentifier = [UIDevice currentDevice].identifierForVendor.UUIDString;
 #ifdef DEBUG
-        NSLog(@"[DEBUG] Save new UniqueDeviceIdentifier %@", uniqueDeviceIdentifier);
+            NSLog(@"[DEBUG] Save new UniqueDeviceIdentifier %@", uniqueDeviceIdentifier);
 #endif
-        keychainItem[(__bridge id)kSecValueData] = [uniqueDeviceIdentifier dataUsingEncoding:NSUTF8StringEncoding];
-        OSStatus sts = SecItemAdd((__bridge CFDictionaryRef)keychainItem, NULL);
-        if (sts) NSLog(@"[ERROR] Save UniqueDeviceIdentifier Error: %d", (int)sts);
-    }
+            keychainItem[(__bridge id)kSecValueData] = [uniqueDeviceIdentifier dataUsingEncoding:NSUTF8StringEncoding];
+            OSStatus sts = SecItemAdd((__bridge CFDictionaryRef)keychainItem, NULL);
+            if (sts) NSLog(@"[ERROR] Save UniqueDeviceIdentifier Error: %d", (int)sts);
+        }
+    });
+
     return uniqueDeviceIdentifier;
 }
 
++ (instancetype)listWithConfig:(AKCloudConfig *)config {
+    return [[self alloc] initWithConfig:config];
+}
 
-- (instancetype)init {
+- (instancetype)initWithConfig:(AKCloudConfig *)config {
     if (self = [super init]) {
         mutableStore = [NSMutableDictionary new];
+        thisDevice = [AKDevice deviceWithMappedObject:nil config:config];
+        thisDevice.UUIDString = [self uniqueDeviceIdentifier];
     }
     return self;
 }

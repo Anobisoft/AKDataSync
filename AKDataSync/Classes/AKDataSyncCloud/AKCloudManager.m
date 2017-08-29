@@ -177,7 +177,7 @@ static NSMapTable<NSString *, id> *instancesByConfig;
     
     _recievedUpdatedRecords = [NSMutableSet new];
     _recievedDeletionInfoRecords = [NSMutableSet new];
-    deviceList = [AKDeviceList new];
+    deviceList = [AKDeviceList listWithConfig:config];
     
     NSString *predicateFormat = [NSString stringWithFormat:@"(%@ == %%@)", config.deviceIDFieldName];
     thisDevicePredicate = [NSPredicate predicateWithFormat:predicateFormat, deviceList.thisDevice.UUIDString];
@@ -335,7 +335,7 @@ static NSMapTable<NSString *, id> *instancesByConfig;
             NSLog(@"[DEBUG] %s count: %ld", __PRETTY_FUNCTION__, (long)records.count);
 #endif
             for (CKRecord<AKMappedObject> *record in records) {
-                AKDevice *device = [AKDevice deviceWithMappedObject:record];
+                AKDevice *device = [AKDevice deviceWithMappedObject:record config:config];
                 [deviceList addDevice:device];
             }
             state |= AKCloudStateDevicesReloaded;
@@ -356,7 +356,7 @@ static NSMapTable<NSString *, id> *instancesByConfig;
             NSLog(@"[DEBUG] %s count: %ld", __PRETTY_FUNCTION__, (long)records.count);
 #endif
             for (CKRecord<AKMappedObject> *record in records) {
-                AKDevice *device = [AKDevice deviceWithMappedObject:record];
+                AKDevice *device = [AKDevice deviceWithMappedObject:record config:config];
                 [deviceList addDevice:device];
             }
         }
