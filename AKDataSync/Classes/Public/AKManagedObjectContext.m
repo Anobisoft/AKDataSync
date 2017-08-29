@@ -155,6 +155,10 @@
     [[AKDataAgregator defaultAgregator] setCloudContext:self containerIdentifier:containerIdentifier databaseScope:databaseScope];
 }
 
+- (void)enableCloudSyncWithConfig:(NSString *)configName {
+    [[AKDataAgregator defaultAgregator] setCloudContext:self config:configName];
+}
+
 - (void)acceptPushNotificationUserInfo:(NSDictionary *)userInfo {
     if (ownedCloudManager) [ownedCloudManager acceptPushNotificationUserInfo:userInfo];
     else NSLog(@"[ERROR] owned cloud manager unordered");

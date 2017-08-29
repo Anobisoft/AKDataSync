@@ -98,6 +98,13 @@
     [context setCloudManager:cloudManager];
     [cloudManager setDataSyncContext:context];
 }
+
+- (void)setCloudContext:(id <AKDataSyncContextPrivate, AKCloudManagerOwner>)context config:(NSString *)configName {
+    id<AKCloudManager> cloudManager = (id<AKCloudManager>)[AKCloudManager instanceWithConfig:configName];
+    [context setAgregator:self];
+    [context setCloudManager:cloudManager];
+    [cloudManager setDataSyncContext:context];
+}
 #endif
 
 
