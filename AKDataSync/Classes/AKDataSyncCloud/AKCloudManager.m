@@ -329,7 +329,7 @@ static NSMapTable<NSString *, id> *instancesByConfig;
 #ifdef DEBUG
     NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
-    [self getAllRecordsOfEntityName:[AKDevice entityName] fetch:^(NSArray<__kindof CKRecord *> *records) {
+    [self getAllRecordsOfEntityName:config.deviceRecordType fetch:^(NSArray<__kindof CKRecord *> *records) {
         if (records) {
 #ifdef DEBUG
             NSLog(@"[DEBUG] %s count: %ld", __PRETTY_FUNCTION__, (long)records.count);
@@ -350,7 +350,7 @@ static NSMapTable<NSString *, id> *instancesByConfig;
 #ifdef DEBUG
     NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
-    [self getNewRecordsOfEntityName:[AKDevice entityName] fetch:^(NSArray<__kindof CKRecord *> *records) {
+    [self getNewRecordsOfEntityName:config.deviceRecordType fetch:^(NSArray<__kindof CKRecord *> *records) {
         if (records) {
 #ifdef DEBUG
             NSLog(@"[DEBUG] %s count: %ld", __PRETTY_FUNCTION__, (long)records.count);

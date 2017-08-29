@@ -13,7 +13,7 @@
 
 @interface AKCloudDescriptionRepresentation(protected)
 
-- (instancetype)initWithRecordType:(NSString *)recordType uniqueData:(NSData *)uniqueData mapping:(AKCloudMapping *)mapping config:(AKCloudConfig *)config;
+- (instancetype)initWithRecordType:(NSString *)recordType uniqueData:(NSData *)uniqueData mapping:(AKCloudMapping *)mapping;
 
 @end
 
@@ -49,7 +49,7 @@
 }
 
 - (instancetype)initWithCloudRecord:(CKRecord<AKMappedObject> *)cloudRecord mapping:(AKCloudMapping *)mapping config:(AKCloudConfig *)config{
-    if (self = [super initWithRecordType:cloudRecord.recordType uniqueData:cloudRecord.uniqueData mapping:mapping config:config]) {
+    if (self = [super initWithRecordType:cloudRecord.recordType uniqueData:cloudRecord.uniqueData mapping:mapping]) {
         _modificationDate = cloudRecord.modificationDate;
         NSMutableDictionary <NSString *, NSObject <NSCoding> *> *tmp_keyedDataProperties = [NSMutableDictionary new];
         NSMutableDictionary <NSString *, CKReference<AKReference> *> *tmp_keyedReferences = [NSMutableDictionary new];

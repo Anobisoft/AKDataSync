@@ -16,7 +16,7 @@
 @end
 
 @implementation AKDevice {
-    __weak AKCloudConfig *config;
+    __weak AKCloudConfig *_config;
 }
 
 + (instancetype)deviceWithMappedObject:(id <AKMappedObject>)mappedObject config:(AKCloudConfig *)config {
@@ -25,7 +25,7 @@
 
 - (instancetype)initWithMappedObject:(id <AKMappedObject>)mappedObject config:(AKCloudConfig *)config {
     if (self = [super initWithMappedObject:mappedObject]) {
-        
+        _config = config;
     }
     return self;
 }
@@ -51,7 +51,7 @@
 }
 
 - (NSString *)entityName {
-    return config.deviceRecordType;
+    return _config.deviceRecordType;
 }
 
 @end
