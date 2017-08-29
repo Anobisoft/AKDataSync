@@ -16,10 +16,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, strong, readonly) NSString *instanceIdentifier;
 
-+ (instancetype)instanceWithContainerIdentifier:(NSString *)identifier databaseScope:(AKDatabaseScope)databaseScope; //unique for identifier+databaseScope. AKDatabaseScopePrivate - default scope
+//unique instance for identifier+databaseScope. AKDatabaseScopePrivate - default scope
++ (instancetype)instanceWithContainerIdentifier:(NSString *)identifier databaseScope:(AKDatabaseScope)databaseScope;
++ (instancetype)instanceWithConfig:(NSString *)configName;
+
 - (void)totalReplication;
 - (void)smartReplication;
-
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;

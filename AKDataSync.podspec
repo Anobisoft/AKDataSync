@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
 s.name             = 'AKDataSync'
-s.version          = '0.0.6'
+s.version          = '0.0.7'
 s.summary          = 'AKDataSync - Automated CoreData synchronization with iCloud'
 s.description      = <<-DESC
 TODO: Add long description of the pod here.
@@ -27,7 +27,7 @@ s.source_files  = "AKDataSync/Classes/*.{h,m}", "AKDataSync/Classes/**/*.{h,m}"
 s.public_header_files = "AKDataSync/Classes/*.h", "AKDataSync/Classes/Public/*.h"
 s.exclude_files = "AKDataSync/Classes/Deprecated/*"
 # s.resource  = "icon.png"
-# s.resources = "AKDataSync/Resources/*.plist"
+s.resources = "AKDataSync/Resources/*.plist"
 # s.preserve_paths = "FilesToSave", "MoreFilesToSave"
 s.frameworks  = "Foundation", "CoreData", "CloudKit", "WatchConnectivity"
 # s.library   = "iconv"

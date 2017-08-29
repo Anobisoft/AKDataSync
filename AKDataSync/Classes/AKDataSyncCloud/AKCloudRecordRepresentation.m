@@ -9,11 +9,11 @@
 #import "AKCloudRecordRepresentation.h"
 #import <CloudKit/CloudKit.h>
 #import "CKRecord+AKDataSync.h"
-#import "AKCloudInternalConst.h"
+#import "AKCloudConfig.h"
 
 @interface AKCloudDescriptionRepresentation(protected)
 
-- (instancetype)initWithRecordType:(NSString *)recordType uniqueData:(NSData *)uniqueData mapping:(AKCloudMapping *)mapping;
+- (instancetype)initWithRecordType:(NSString *)recordType uniqueData:(NSData *)uniqueData mapping:(AKCloudMapping *)mapping config:(AKCloudConfig *)config;
 
 @end
 
@@ -44,12 +44,12 @@
     return _keyedSetsOfReferences;
 }
 
-+ (instancetype)instantiateWithCloudRecord:(CKRecord<AKMappedObject> *)cloudRecord mapping:(AKCloudMapping *)mapping {
-    return [[self alloc] initWithCloudRecord:cloudRecord mapping:mapping];
++ (instancetype)instantiateWithCloudRecord:(CKRecord<AKMappedObject> *)cloudRecord mapping:(AKCloudMapping *)mapping config:(AKCloudConfig *)config{
+    return [[self alloc] initWithCloudRecord:cloudRecord mapping:mapping config:config];
 }
 
-- (instancetype)initWithCloudRecord:(CKRecord<AKMappedObject> *)cloudRecord mapping:(AKCloudMapping *)mapping {
-    if (self = [super initWithRecordType:cloudRecord.recordType uniqueData:cloudRecord.uniqueData mapping:mapping]) {
+- (instancetype)initWithCloudRecord:(CKRecord<AKMappedObject> *)cloudRecord mapping:(AKCloudMapping *)mapping config:(AKCloudConfig *)config{
+    if (self = [super initWithRecordType:cloudRecord.recordType uniqueData:cloudRecord.uniqueData mapping:mapping config:config]) {
         _modificationDate = cloudRecord.modificationDate;
         NSMutableDictionary <NSString *, NSObject <NSCoding> *> *tmp_keyedDataProperties = [NSMutableDictionary new];
         NSMutableDictionary <NSString *, CKReference<AKReference> *> *tmp_keyedReferences = [NSMutableDictionary new];
@@ -67,7 +67,7 @@
                 }
                 [tmp_keyedSetsOfReferences setObject:refList.copy forKey:key];
             }
-            if (![key isEqualToString:AKCloudRealModificationDateProperty]) {
+            if (![key isEqualToString:config.realModificationDateFieldName]) {
                 [tmp_keyedDataProperties setObject:cloudRecord[key] forKey:key];
             }
         }

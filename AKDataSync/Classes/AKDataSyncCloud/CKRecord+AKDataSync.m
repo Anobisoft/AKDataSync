@@ -11,7 +11,8 @@
 #import "NSUUID+AnobiKit.h"
 #import "CKRecordID+AKDataSync.h"
 #import "CKReference+AKDataSync.h"
-#import "AKCloudInternalConst.h"
+#import "AKCloudMapping.h"
+#import "AKCloudConfig.h"
 
 @implementation CKRecord (AKDataSync)
 
@@ -23,12 +24,13 @@
     return [[self alloc] initWithRecordType:recordType];
 }
 
-- (id <AKDescription>)descriptionOfDeletedObjectWithMapping:(AKCloudMapping *)mapping {
-    return [AKCloudDescriptionRepresentation instantiateWithRecordType:self[AKCloudDeletionInfoRecordProperty_recordType] uniqueData:[NSUUID UUIDWithUUIDString:self[AKCloudDeletionInfoRecordProperty_recordID]].data mapping:mapping];
+- (id <AKDescription>)descriptionOfDeletedObjectWithMapping:(AKCloudMapping *)mapping config:(AKCloudConfig *)config {
+    return [AKCloudDescriptionRepresentation instantiateWithRecordType:self[config.recordTypeFieldName]
+                                                            uniqueData:[NSUUID UUIDWithUUIDString:self[config.recordIDFieldName]].data mapping:mapping];
 }
 
-- (id <AKMappedObject>)mappedObjectWithMapping:(AKCloudMapping *)mapping {
-    return [AKCloudRecordRepresentation instantiateWithCloudRecord:(CKRecord<AKMappedObject> *)self mapping:mapping];
+- (id <AKMappedObject>)mappedObjectWithMapping:(AKCloudMapping *)mapping config:(AKCloudConfig *)config {
+    return [AKCloudRecordRepresentation instantiateWithCloudRecord:(CKRecord<AKMappedObject> *)self mapping:mapping config:config];
 }
 
 #pragma mark - getters
@@ -41,9 +43,9 @@
     return self.recordID.recordName;
 }
 
-- (NSDate *)modificationDate {
-    return self[AKCloudRealModificationDateProperty];
-}
+//- (NSDate *)modificationDate {
+//    return self[AKCloudRealModificationDateProperty];
+//}
 
 - (NSString *)entityName {
     @throw [NSException exceptionWithName:NSObjectInaccessibleException reason:[NSString stringWithFormat:@"[NOTICE] -[CKRecord entityName] unavailable. recordType %@ UUID %@", self.recordType, self.UUIDString] userInfo:nil];
@@ -60,9 +62,9 @@
 
 #pragma mark - setters
 
-- (void)setModificationDate:(NSDate *)date {
-    self[AKCloudRealModificationDateProperty] = date;
-}
+//- (void)setModificationDate:(NSDate *)date {
+//    self[AKCloudRealModificationDateProperty] = date;
+//}
 
 - (void)setKeyedDataProperties:(NSDictionary <NSString *, NSObject <NSCoding> *> *)keyedDataProperties {
     for (NSString *key in keyedDataProperties.allKeys) {

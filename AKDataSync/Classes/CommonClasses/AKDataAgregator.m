@@ -19,9 +19,6 @@
 
 @implementation AKDataAgregator {
     NSMutableSet <id<AKDataSyncContextPrivate>> *watchContextSet;
-#if TARGET_OS_IOS
-    NSMutableDictionary <NSString *, id<AKCloudManager>> *cloudManagers[4];
-#endif
 }
 
 + (instancetype)new {
@@ -51,16 +48,11 @@
         [self.watchConnector setAgregator:self];
         watchContextSet = [NSMutableSet new];
 //#warning UNCOMPLETED reload "replication needed" status
-#if TARGET_OS_IOS
-        cloudManagers[AKDatabaseScopeDefault] = cloudManagers[AKDatabaseScopePrivate] = [NSMutableDictionary new];
-        cloudManagers[AKDatabaseScopePublic] = [NSMutableDictionary new];
-        cloudManagers[AKDatabaseScopeShared] = nil;
-#endif
     }
     return self;
 }
 
-- (void)willCommitTransaction:(id <AKRepresentableTransaction>)transaction {
+- (void)context:(id<AKCloudManagerOwner>)context willCommitTransaction:(id<AKRepresentableTransaction>)transaction {
     if ([watchContextSet containsObject:(id <AKDataSyncContextPrivate>)transaction]) {
         AKTransactionRepresentation *transactionRepresentation = [AKTransactionRepresentation instantiateWithRepresentableTransaction:transaction];
         if (_watchConnector) {
@@ -71,14 +63,9 @@
             }
         }
     }
-#if TARGET_OS_IOS
-    for (int i = 0; i < 4; i++) {
-        id<AKCloudManager> cloudManager = cloudManagers[i][transaction.contextIdentifier];
-        if (cloudManager) {
-            [cloudManager willCommitTransaction:transaction];
-        }
-    }
-#endif
+    
+    if (context.cloudManager) [context.cloudManager context:context willCommitTransaction:transaction];
+
 }
 
 - (void)watchConnectorGetReady:(id<AKWatchConnector>)connector {
@@ -105,12 +92,8 @@
 }
 
 #if TARGET_OS_IOS
-- (void)setCloudContext:(id <AKDataSyncContextPrivate, AKCloudMappingProvider>)context containerIdentifier:(NSString *)containerIdentifier databaseScope:(AKDatabaseScope)databaseScope {
-    id<AKCloudManager> cloudManager = cloudManagers[databaseScope][context.contextIdentifier];
-    if (!cloudManager) {
-        cloudManager = (id<AKCloudManager>)[AKCloudManager instanceWithContainerIdentifier:containerIdentifier databaseScope:databaseScope];
-        cloudManagers[databaseScope][context.contextIdentifier] = cloudManager;
-    }
+- (void)setCloudContext:(id <AKDataSyncContextPrivate, AKCloudManagerOwner>)context containerIdentifier:(NSString *)containerIdentifier databaseScope:(AKDatabaseScope)databaseScope {
+    id<AKCloudManager> cloudManager = (id<AKCloudManager>)[AKCloudManager instanceWithContainerIdentifier:containerIdentifier databaseScope:databaseScope];
     [context setAgregator:self];
     [context setCloudManager:cloudManager];
     [cloudManager setDataSyncContext:context];

@@ -6,12 +6,13 @@
 //  Copyright © 2016 Anobisoft. All rights reserved.
 //
 
+#define AKCloudMaxModificationDateForEntityUDKey @"AKCloudMaxModificationDateForEntity"
+#define AKCloudPreparedToCloudRecordsUDKey @"AKCloudPreparedToCloudRecords"
 
 #import "AKCloudManager.h"
-#import "AKDataSyncTypes.h"
 #import "AKDeviceList.h"
 #import "AKPrivateProtocol.h"
-#import "NSUUID+AnobiKit.h"
+#import "AKCloudConfig.h"
 
 #import "AKCloudTransaction.h"
 #import "AKCloudRecordRepresentation.h"
@@ -22,8 +23,10 @@
 #import "CKRecordID+AKDataSync.h"
 #import "CKReference+AKDataSync.h"
 
-#import "AKCloudInternalConst.h"
-#import "NSDate+AnobiKit.h"
+
+#import <AnobiKit/NSUUID+AnobiKit.h>
+#import <AnobiKit/NSDate+AnobiKit.h>
+
 
 typedef void (^FetchRecord)(__kindof CKRecord *record);
 typedef void (^FetchRecordsArray)(NSArray <__kindof CKRecord *> *records);
@@ -42,7 +45,8 @@ typedef NS_ENUM(NSUInteger, AKCloudState) {
 @end
 
 @implementation AKCloudManager {
-    id <AKDataSyncContextPrivate, AKCloudMappingProvider> syncContext;
+    id <AKDataSyncContextPrivate, AKCloudManagerOwner> syncContext;
+    AKCloudConfig *config;
     
     AKCloudState state;
     CKContainer *container;
@@ -62,6 +66,7 @@ typedef NS_ENUM(NSUInteger, AKCloudState) {
     
     NSTimer *retryToInitTimer;
     NSTimer *resmartTimer;
+    
 }
 
 
@@ -107,67 +112,91 @@ NSMutableDictionary *maxCloudModificationDateForEntityMutable;
 }
 
 static NSMutableDictionary<NSString *, id> *instances[4];
+static NSMutableDictionary<NSString *, id> *instancesByConfig;
 + (void)initialize {
     [super initialize];
     instances[AKDatabaseScopeDefault] = instances[AKDatabaseScopePrivate] = [NSMutableDictionary new];
     instances[AKDatabaseScopePublic] = [NSMutableDictionary new];
     instances[AKDatabaseScopeShared] = [NSMutableDictionary new];
+    instancesByConfig = [NSMutableDictionary new];
 }
 
 + (instancetype)instanceWithContainerIdentifier:(NSString *)identifier databaseScope:(AKDatabaseScope)databaseScope {
-    id instance = [instances[databaseScope % 4] objectForKey:identifier];
+    id instance = instances[databaseScope % 4][identifier];
     if (!instance) {
         instance = [[self alloc] initWithContainerIdentifier:identifier databaseScope:databaseScope];
-        [instances[databaseScope % 4] setObject:instance forKey:identifier];
-    }    
+        instances[databaseScope % 4][identifier] = instance;
+    }
     return instance;
 }
 
 - (instancetype)initWithContainerIdentifier:(NSString *)identifier databaseScope:(AKDatabaseScope)databaseScope {
     if (self = [super init]) {
-        primaryInitializationGroup = dispatch_group_create();
-        lockCloudGroup = dispatch_group_create();
-        waitingQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-        
-        _recievedUpdatedRecords = [NSMutableSet new];
-        _recievedDeletionInfoRecords = [NSMutableSet new];
-        deviceList = [AKDeviceList new];
-        thisDevicePredicate = [NSPredicate predicateWithFormat:[NSString stringWithFormat:@"(%@ == %%@)", AKCloudDeletionInfoRecordProperty_deviceID], deviceList.thisDevice.UUIDString];
-#ifdef DEBUG
-        NSLog(@"[DEBUG] thisDevicePredicate: %@", thisDevicePredicate);
-#endif
-        
-        container = [CKContainer containerWithIdentifier:identifier];
-        
-        NSString *dbScopeString;
-        switch (databaseScope) {
-            case AKDatabaseScopePublic:
-                db = container.publicCloudDatabase;
-                dbScopeString = @"Public";
-                break;
-            case AKDatabaseScopeShared:
-                db = container.sharedCloudDatabase;
-                dbScopeString = @"Shared";
-                break;
-            default:
-                dbScopeString = @"Private";
-                db = container.privateCloudDatabase;
-                break;
-        }
-        _instanceIdentifier = [NSString stringWithFormat:@"%@%@-%@", NSStringFromClass(self.class), dbScopeString, container.containerIdentifier];
-        
-        maxCloudModificationDateForEntityUDCompositeKey = [NSString stringWithFormat:@"%@-%@", _instanceIdentifier, AKCloudMaxModificationDateForEntityUDKey];
-        maxCloudModificationDateForEntityMutable = self.maxCloudModificationDateForEntity.mutableCopy;
-        
-        preparedToCloudRecordsUDCompositeKey = [NSString stringWithFormat:@"%@-%@", _instanceIdentifier, AKCloudPreparedToCloudRecordsUDKey];
-        NSData *preparedToCloudRecordsData = [[NSUserDefaults standardUserDefaults] objectForKey:preparedToCloudRecordsUDCompositeKey];
-        if (preparedToCloudRecordsData) preparedToCloudRecords = [NSKeyedUnarchiver unarchiveObjectWithData:preparedToCloudRecordsData];
-        else preparedToCloudRecords = [AKPreparedToCloudRecords new];
-        
-        [self tryPerformInit];
+        config = [AKCloudConfig configWithContainerIdentifier:identifier databaseScope:databaseScope];
+        [self initConfiguredInstance];
     }
     return self;
 }
+
++ (instancetype)instanceWithConfig:(NSString *)configName {
+    id instance = instancesByConfig[configName];
+    if (!instance) {
+        instance = [[self alloc] initWithConfig:configName];
+        instancesByConfig[configName] = instance;
+    }
+    return instance;
+}
+
+- (instancetype)initWithConfig:(NSString *)configName {
+    if (self = [super init]) {
+        config = [AKCloudConfig configWithName:configName];
+        [self initConfiguredInstance];
+    }
+    return self;
+}
+
+- (void)initConfiguredInstance {
+    primaryInitializationGroup = dispatch_group_create();
+    lockCloudGroup = dispatch_group_create();
+    waitingQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    
+    _recievedUpdatedRecords = [NSMutableSet new];
+    _recievedDeletionInfoRecords = [NSMutableSet new];
+    deviceList = [AKDeviceList new];
+    
+    NSString *predicateFormat = [NSString stringWithFormat:@"(%@ == %%@)", config.deviceIDFieldName];
+    thisDevicePredicate = [NSPredicate predicateWithFormat:predicateFormat, deviceList.thisDevice.UUIDString];
+    
+    container = [CKContainer containerWithIdentifier:config.containerIdentifier];
+    
+    NSString *dbScopeString;
+    switch (config.databaseScope) {
+        case AKDatabaseScopePublic:
+            db = container.publicCloudDatabase;
+            dbScopeString = @"Public";
+            break;
+        case AKDatabaseScopeShared:
+            db = container.sharedCloudDatabase;
+            dbScopeString = @"Shared";
+            break;
+        default:
+            dbScopeString = @"Private";
+            db = container.privateCloudDatabase;
+            break;
+    }
+    _instanceIdentifier = [NSString stringWithFormat:@"%@%@-%@", NSStringFromClass(self.class), dbScopeString, container.containerIdentifier];
+    
+    maxCloudModificationDateForEntityUDCompositeKey = [NSString stringWithFormat:@"%@-%@", _instanceIdentifier, AKCloudMaxModificationDateForEntityUDKey];
+    maxCloudModificationDateForEntityMutable = self.maxCloudModificationDateForEntity.mutableCopy;
+    
+    preparedToCloudRecordsUDCompositeKey = [NSString stringWithFormat:@"%@-%@", _instanceIdentifier, AKCloudPreparedToCloudRecordsUDKey];
+    NSData *preparedToCloudRecordsData = [[NSUserDefaults standardUserDefaults] objectForKey:preparedToCloudRecordsUDCompositeKey];
+    if (preparedToCloudRecordsData) preparedToCloudRecords = [NSKeyedUnarchiver unarchiveObjectWithData:preparedToCloudRecordsData];
+    else preparedToCloudRecords = [AKPreparedToCloudRecords new];
+    
+    [self tryPerformInit];
+}
+
 
 @synthesize enabled = _enabled;
 - (void)setEnabled:(BOOL)enabled {
@@ -203,7 +232,7 @@ static NSMutableDictionary<NSString *, id> *instances[4];
                 retryToInitTimer = nil;
             }
             dispatch_async(dispatch_get_main_queue(), ^{
-                retryToInitTimer = [NSTimer scheduledTimerWithTimeInterval:AKCloudInitTimeout repeats:NO block:^(NSTimer * _Nonnull timer) {
+                retryToInitTimer = [NSTimer scheduledTimerWithTimeInterval:config.initTimeout repeats:NO block:^(NSTimer * _Nonnull timer) {
                     [self tryPerformInit];
                 }];
             });
@@ -374,7 +403,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
         subscription.notificationInfo.category = @"CloudKit";
         [db saveSubscription:subscription completionHandler:completionHandler];
     }
-    CKQuerySubscription *subscription = [[CKQuerySubscription alloc] initWithRecordType:AKCloudDeletionInfoRecordType
+    CKQuerySubscription *subscription = [[CKQuerySubscription alloc] initWithRecordType:config.deletionInfoRecordType
                                                                               predicate:thisDevicePredicate
                                                                                 options:CKQuerySubscriptionOptionsFiresOnRecordCreation+CKQuerySubscriptionOptionsFiresOnRecordUpdate];
     [db saveSubscription:subscription completionHandler:completionHandler];
@@ -395,7 +424,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
                 if (record) {
                     NSLog(@"[DEBUG] found record %@", record);
                     NSString *entityName = self.mapping.reverseMap[record.recordType];
-                    if ([record.recordType isEqualToString:AKCloudDeletionInfoRecordType]) {
+                    if ([record.recordType isEqualToString:config.deletionInfoRecordType]) {
                         [_recievedDeletionInfoRecords addObject:record];
                         [preparedToCloudRecords addRecordIDToDelete:record.recordID];
                     } else if (entityName) {
@@ -425,7 +454,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
     return (state & requiredState) == requiredState;
 }
 
-- (void)setDataSyncContext:(id<AKDataSyncContextPrivate, AKCloudMappingProvider>)context {
+- (void)setDataSyncContext:(id<AKDataSyncContextPrivate, AKCloudManagerOwner>)context {
     syncContext = context;
     [self startSmart];
 }
@@ -440,7 +469,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
             [self subscribeToRegisteredRecordTypes];
             [self smartReplication];
         } else {
-            if (self.enabled) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(AKCloudInitTimeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            if (self.enabled) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(config.initTimeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 if (self.enabled) [self startSmart];
             });
         }
@@ -451,11 +480,11 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
     return syncContext.cloudMapping;
 }
 
-- (id<AKDataSyncContextPrivate, AKCloudMappingProvider>)dataSyncContext {
+- (id<AKDataSyncContextPrivate, AKCloudManagerOwner>)dataSyncContext {
     return syncContext;
 }
 
-- (void)willCommitTransaction:(id<AKRepresentableTransaction>)transaction {
+- (void)context:(id<AKCloudManagerOwner>)context willCommitTransaction:(id<AKRepresentableTransaction>)transaction {
 #ifdef DEBUG
     NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
@@ -515,7 +544,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
                 preparedToCloudRecords.accumulativeTransaction = [AKTransactionRepresentation instantiateWithRepresentableTransaction:transaction];
                 [self savePreparedToCloudRecords];
             }
-            if (self.enabled) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(AKCloudInitTimeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            if (self.enabled) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(config.initTimeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 if (self.enabled) [self performPrimaryInitCompletion:^{
                     [self performCloudUpdateWithLocalTransaction:preparedToCloudRecords.accumulativeTransaction];
                 }];
@@ -576,7 +605,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
             [resmartTimer invalidate];
             resmartTimer = nil;
         }
-        resmartTimer = [NSTimer scheduledTimerWithTimeInterval:AKCloudSmartReplicationTimeout repeats:NO block:^(NSTimer * _Nonnull timer) {
+        resmartTimer = [NSTimer scheduledTimerWithTimeInterval:config.smartReplicationTimeout repeats:NO block:^(NSTimer * _Nonnull timer) {
             [resmartTimer invalidate];
             resmartTimer = nil;
             [self smartReplication];
@@ -617,7 +646,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
 }
 
 - (void)getCloudDeletionInfoCompletion:(void (^)(void))completion {
-    [self getRecordsOfEntityName:AKCloudDeletionInfoRecordType withPredicate:thisDevicePredicate fetch:^(NSArray<__kindof CKRecord *> *records) {
+    [self getRecordsOfEntityName:config.deletionInfoRecordType withPredicate:thisDevicePredicate fetch:^(NSArray<__kindof CKRecord *> *records) {
         for (CKRecord *record in records) {
             [_recievedDeletionInfoRecords addObject:record];
             [preparedToCloudRecords addRecordIDToDelete:record.recordID]; //cleanup
@@ -630,7 +659,8 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
     if (_recievedUpdatedRecords.count + _recievedDeletionInfoRecords.count) {
         [syncContext performMergeWithTransaction:[AKCloudTransaction transactionWithUpdatedRecords:self.recievedUpdatedRecords
                                                                                deletionInfoRecords:self.recievedDeletionInfoRecords
-                                                                                           mapping:self.mapping]];
+                                                                                           mapping:self.mapping
+                                                                                            config:config]];
         [_recievedUpdatedRecords removeAllObjects];
         [_recievedDeletionInfoRecords removeAllObjects];
     }
@@ -753,16 +783,16 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
         return;
     }
 #ifdef DEBUG
-    else {
-        NSLog(@"[DEBUG] %s entity %@ UUID %@", __PRETTY_FUNCTION__, syncObject.entityName, syncObject.uniqueData.UUIDString);
-    }
+//    else {
+//        NSLog(@"[DEBUG] %s entity %@ UUID %@", __PRETTY_FUNCTION__, syncObject.entityName, syncObject.uniqueData.UUIDString);
+//    }
 #endif
     dispatch_group_enter(preparedToCloudRecords.lockGroup);
     CKRecordID *recordID = [CKRecordID recordIDWithUUIDString:syncObject.uniqueData.UUIDString];
     [self recordByRecordID:recordID fetch:^(CKRecord<AKMappedObject> *record, NSError * _Nullable error) {
         if (record) {
-            if ([record.modificationDate compare:syncObject.modificationDate] != NSOrderedAscending) {
-                NSLog(@"[WARNING] Cloud record %@ up to date %@", record.UUIDString, record.modificationDate);
+            if ([record[config.realModificationDateFieldName] compare:syncObject.modificationDate] != NSOrderedAscending) {
+                NSLog(@"[WARNING] Cloud record %@ up to date %@", record.UUIDString, record[config.realModificationDateFieldName]);
                 dispatch_group_leave(preparedToCloudRecords.lockGroup);
                 return ; // record update no needed
             }
@@ -779,7 +809,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
             }
         }
         record.keyedDataProperties = syncObject.keyedDataProperties;
-        record.modificationDate = syncObject.modificationDate;
+        record[config.realModificationDateFieldName] = syncObject.modificationDate;
         
         if ([syncObject conformsToProtocol:@protocol(AKRelatableToOne)]) {
             NSObject <AKRelatableToOne> *relatableObject = (NSObject <AKRelatableToOne> *)syncObject;
@@ -814,10 +844,10 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
     CKRecordID *recordID = [CKRecordID recordIDWithUUIDString:description.uniqueData.UUIDString];
     [preparedToCloudRecords addRecordIDToDelete:recordID];
     for (AKDevice *device in deviceList) {
-        CKRecord *deletionInfo = [CKRecord recordWithRecordType:AKCloudDeletionInfoRecordType];
-        deletionInfo[AKCloudDeletionInfoRecordProperty_recordType] = self.mapping[description.entityName];
-        deletionInfo[AKCloudDeletionInfoRecordProperty_recordID] = description.uniqueData.UUIDString;
-        deletionInfo[AKCloudDeletionInfoRecordProperty_deviceID] = device.UUIDString;
+        CKRecord *deletionInfo = [CKRecord recordWithRecordType:config.deletionInfoRecordType];
+        deletionInfo[config.recordTypeFieldName] = self.mapping[description.entityName];
+        deletionInfo[config.recordIDFieldName] = description.uniqueData.UUIDString;
+        deletionInfo[config.deviceIDFieldName] = device.UUIDString;
         [preparedToCloudRecords addRecordToSave:deletionInfo];
     }
 }
@@ -847,7 +877,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
             } else {
                 [preparedToCloudRecords clearWithSavedRecords:savedRecords deletedRecordIDs:deletedRecordIDs];
                 [self savePreparedToCloudRecords];
-                if (self.enabled) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(AKCloudTryToPushTimeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                if (self.enabled) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(config.tryToPushTimeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                     dispatch_async(waitingQueue, ^{
                         dispatch_group_wait(preparedToCloudRecords.lockGroup, DISPATCH_TIME_FOREVER);
                         dispatch_group_wait(lockCloudGroup, DISPATCH_TIME_FOREVER);

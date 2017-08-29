@@ -8,10 +8,10 @@
 
 #import "AKCloudDescriptionRepresentation.h"
 
-@class CKRecord, AKCloudMapping;
+@class CKRecord, AKCloudMapping, AKCloudConfig;
 
 @interface AKCloudRecordRepresentation : AKCloudDescriptionRepresentation <AKMappedObject, AKRelatableToOne, AKRelatableToMany>
 
-+ (instancetype)instantiateWithCloudRecord:(CKRecord<AKMappedObject> *)cloudRecord mapping:(AKCloudMapping *)mapping;
++ (instancetype)instantiateWithCloudRecord:(CKRecord<AKMappedObject> *)cloudRecord mapping:(AKCloudMapping *)mapping config:(AKCloudConfig *)config;
 
 @end

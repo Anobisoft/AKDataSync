@@ -8,7 +8,6 @@
 
 #import "AKDevice.h"
 #import "NSUUID+AnobiKit.h"
-#import "AKCloudInternalConst.h"
 
 @interface AKObjectRepresentation(protected)
 
@@ -52,10 +51,5 @@
 - (NSString *)entityName {
     return [self.class entityName];
 }
-
-+ (NSString *)entityName {
-    return AKCloudDevicesInfoRecordType;
-}
-
 
 @end

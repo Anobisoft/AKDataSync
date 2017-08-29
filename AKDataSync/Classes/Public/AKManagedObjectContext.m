@@ -51,7 +51,7 @@
 
 @end
 #if TARGET_OS_IOS
-@interface AKManagedObjectContext() <AKDataSyncContextPrivate, AKCloudMappingProvider>
+@interface AKManagedObjectContext() <AKDataSyncContextPrivate, AKCloudManagerOwner>
 
 
 @end
@@ -71,7 +71,6 @@
     id<AKTransactionsAgregator> transactionsAgregator;
 #if TARGET_OS_IOS
     AKCloudMapping *cloudMapping;
-    id<AKCloudManager> ownedCloudManager;
 #endif
 }
 
@@ -150,11 +149,9 @@
 
 #pragma mark - cloud support
 #if TARGET_OS_IOS
-- (void)setCloudManager:(id<AKCloudManager>)cloudManager {
-    ownedCloudManager = cloudManager;
-}
+@synthesize cloudManager = ownedCloudManager;
 
-- (void)initCloudWithContainerIdentifier:(NSString *)containerIdentifier databaseScope:(AKDatabaseScope)databaseScope {
+- (void)enableCloudSyncWithContainerIdentifier:(NSString *)containerIdentifier databaseScope:(AKDatabaseScope)databaseScope {
     [[AKDataAgregator defaultAgregator] setCloudContext:self containerIdentifier:containerIdentifier databaseScope:databaseScope];
 }
 
@@ -234,7 +231,7 @@
             }
         }
 #endif
-        [transactionsAgregator willCommitTransaction:transaction];
+        [transactionsAgregator context:self willCommitTransaction:transaction];
         #if TARGET_OS_IOS
         [self cloudTotalReplication];
         #endif
@@ -451,7 +448,7 @@
 - (void)commit {
     if ([self hasChanges]) {        
         [self performBlock:^{
-            if (transactionsAgregator) [transactionsAgregator willCommitTransaction:[AKRepresentableTransaction instantiateWithContext:self]];
+            if (transactionsAgregator) [transactionsAgregator context:self willCommitTransaction:[AKRepresentableTransaction instantiateWithContext:self]];
             NSError *error;
             if ([self save:&error]) {
                 [self saveMainContext];

@@ -10,7 +10,7 @@
 @protocol AKRepresentableTransaction;
 @protocol AKDataSyncContextPrivate;
 #if TARGET_OS_IOS
-@protocol AKCloudManager, AKCloudMappingProvider;
+@protocol AKCloudManager, AKCloudManagerOwner;
 #endif
 @protocol AKWatchConnector;
 
@@ -46,7 +46,8 @@
 #if TARGET_OS_IOS
 @protocol AKCloudManager <AKTransactionsAgregator>
 @required
-- (void)setDataSyncContext:(id <AKDataSyncContextPrivate, AKCloudMappingProvider>)context;
+- (void)setDataSyncContext:(id <AKDataSyncContextPrivate, AKCloudManagerOwner>)context;
+
 @property (nonatomic, assign) BOOL enabled;
 - (void)acceptPushNotificationUserInfo:(NSDictionary *)userInfo;
 - (void)smartReplication;
@@ -54,8 +55,8 @@
 - (BOOL)ready;
 @end
 
-@protocol AKCloudMappingProvider <NSObject>
-- (void)setCloudManager:(id<AKCloudManager>)cloudManager;
+@protocol AKCloudManagerOwner <NSObject>
+@property (weak) id<AKCloudManager> cloudManager;
 - (AKCloudMapping *)cloudMapping;
 @end
 #endif
@@ -73,7 +74,7 @@
 
 @protocol AKTransactionsAgregator <NSObject>
 @required
-- (void)willCommitTransaction:(id <AKRepresentableTransaction>)transaction;
+- (void)context:(id<AKCloudManagerOwner>)context willCommitTransaction:(id <AKRepresentableTransaction>)transaction;
 @end
 
 @protocol AKWatchTransactionsAgregator <NSObject>

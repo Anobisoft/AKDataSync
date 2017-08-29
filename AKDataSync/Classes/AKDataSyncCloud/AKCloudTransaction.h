@@ -9,10 +9,13 @@
 #import <Foundation/Foundation.h>
 #import "AKPrivateProtocol.h"
 
-@class CKRecord;
+@class CKRecord, AKCloudConfig;
 
 @interface AKCloudTransaction : NSObject <AKRepresentableTransaction>
 
-+ (instancetype)transactionWithUpdatedRecords:(NSSet <CKRecord<AKMappedObject> *> *)updatedRecords deletionInfoRecords:(NSSet <CKRecord *> *)deletionInfoRecords mapping:(AKCloudMapping *)mapping;
++ (instancetype)transactionWithUpdatedRecords:(NSSet <CKRecord<AKMappedObject> *> *)updatedRecords
+                          deletionInfoRecords:(NSSet <CKRecord *> *)deletionInfoRecords
+                                      mapping:(AKCloudMapping *)mapping
+                                       config:(AKCloudConfig *)config;
 
 @end

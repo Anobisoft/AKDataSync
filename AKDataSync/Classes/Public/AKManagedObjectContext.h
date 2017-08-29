@@ -28,7 +28,7 @@ typedef void (^FetchObject)(__kindof NSManagedObject *object);
 + (instancetype)defaultContext;
 @property (nonatomic, weak) id <AKDataSyncContextDelegate> delegate;
 
-- (void)initCloudWithContainerIdentifier:(NSString *)containerIdentifier databaseScope:(AKDatabaseScope)databaseScope __WATCHOS_UNAVAILABLE;
+- (void)enableCloudSyncWithContainerIdentifier:(NSString *)containerIdentifier databaseScope:(AKDatabaseScope)databaseScope __WATCHOS_UNAVAILABLE;
 @property (nonatomic, assign) BOOL cloudEnabled __WATCHOS_UNAVAILABLE;
 - (void)cloudReplication __WATCHOS_UNAVAILABLE;
 - (void)acceptPushNotificationUserInfo:(NSDictionary *)userInfo __WATCHOS_UNAVAILABLE;
