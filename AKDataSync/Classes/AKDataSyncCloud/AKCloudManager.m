@@ -27,7 +27,6 @@
 #import <AnobiKit/NSUUID+AnobiKit.h>
 #import <AnobiKit/NSDate+AnobiKit.h>
 
-
 @interface NSMapTable<KeyType, ObjectType> (ASKeyedSubscripted)
 - (ObjectType)objectForKeyedSubscript:(KeyType <NSCopying>)key;
 - (void)setObject:(ObjectType)obj forKeyedSubscript:(KeyType <NSCopying>)key;
@@ -247,7 +246,7 @@ static NSMapTable<NSString *, id> *instancesByConfig;
                 retryToInitTimer = nil;
             }
             dispatch_async(dispatch_get_main_queue(), ^{
-                retryToInitTimer = [NSTimer scheduledTimerWithTimeInterval:config.initTimeout repeats:NO block:^(NSTimer * _Nonnull timer) {
+                retryToInitTimer = [NSTimer scheduledTimerWithTimeInterval:config.initTimeout repeats:false block:^(NSTimer * _Nonnull timer) {
                     [self tryPerformInit];
                 }];
             });
@@ -484,7 +483,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
             [self subscribeToRegisteredRecordTypes];
             [self smartReplication];
         } else {
-            if (self.enabled) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(config.initTimeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            if (self.enabled) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(config.smartReplicationTimeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 if (self.enabled) [self startSmart];
             });
         }
@@ -576,17 +575,17 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
 #ifdef DEBUG
     NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
-    if (self.enabled) [self replicationTotal:false];
+    if (self.enabled) [self replicationTotal:false completion:nil];
 }
 
-- (void)totalReplication {
+- (void)totalReplication:(AKBlock)completion {
 #ifdef DEBUG
     NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
-    if (self.enabled) [self replicationTotal:true];
+    if (self.enabled) [self replicationTotal:true completion:completion];
 }
 
-- (void)replicationTotal:(BOOL)total {
+- (void)replicationTotal:(BOOL)total completion:(AKBlock)completion {
     if (total) {
         if (totalReplicationInprogress) return ;
         else totalReplicationInprogress = smartReplicationInprogress = true;
@@ -602,10 +601,12 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
             [self reloadMappedRecordsTotal:total completion:^{
                 dispatch_group_leave(lockCloudGroup);
                 totalReplicationInprogress = smartReplicationInprogress = false;
+                if (completion) completion();
                 [self resmart];
             }];
         } else {
             totalReplicationInprogress = smartReplicationInprogress = false;
+            if (completion) completion();
             [self resmart];
         }
     });
@@ -620,7 +621,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
             [resmartTimer invalidate];
             resmartTimer = nil;
         }
-        resmartTimer = [NSTimer scheduledTimerWithTimeInterval:config.smartReplicationTimeout repeats:NO block:^(NSTimer * _Nonnull timer) {
+        resmartTimer = [NSTimer scheduledTimerWithTimeInterval:config.smartReplicationTimeout repeats:false block:^(NSTimer * _Nonnull timer) {
             [resmartTimer invalidate];
             resmartTimer = nil;
             [self smartReplication];
@@ -806,7 +807,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
     CKRecordID *recordID = [CKRecordID recordIDWithUUIDString:syncObject.uniqueData.UUIDString];
     [self recordByRecordID:recordID fetch:^(CKRecord<AKMappedObject> *record, NSError * _Nullable error) {
         if (record) {
-            if ([record[config.realModificationDateFieldName] compare:syncObject.modificationDate] != NSOrderedAscending) {
+            if (record[config.realModificationDateFieldName] && [record[config.realModificationDateFieldName] compare:syncObject.modificationDate] != NSOrderedAscending) {
                 NSLog(@"[WARNING] Cloud record %@ up to date %@", record.UUIDString, record[config.realModificationDateFieldName]);
                 dispatch_group_leave(preparedToCloudRecords.lockGroup);
                 return ; // record update no needed

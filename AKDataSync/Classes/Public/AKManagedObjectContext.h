@@ -10,6 +10,7 @@
 #import "AKDataSyncTypes.h"
 #import "AKPublicProtocol.h"
 #import "NSManagedObject+AKDataSync.h"
+#import <AnobiKit/AKTypes.h>
 
 
 #define ASC ascending:true
@@ -34,6 +35,7 @@ typedef void (^FetchObject)(__kindof NSManagedObject *object);
 - (void)cloudReplication __WATCHOS_UNAVAILABLE;
 - (void)acceptPushNotificationUserInfo:(NSDictionary *)userInfo __WATCHOS_UNAVAILABLE;
 - (void)performTotalReplication;
+- (BOOL)totalReplicationInProgress;
 - (void)enableWatchSynchronization;
 
 - (id)init NS_UNAVAILABLE;
@@ -45,7 +47,7 @@ typedef void (^FetchObject)(__kindof NSManagedObject *object);
 - (void)objectByUniqueData:(NSData *)uniqueData entityName:(NSString *)entityName fetch:(FetchObject)fetch;
 
 - (void)insertTo:(NSString *)entityName fetch:(FetchObject)fetch;
-- (void)deleteObject:(NSManagedObject *)object completion:(void (^)(void))completion;
+- (void)deleteObject:(NSManagedObject *)object completion:(AKBlock)completion;
 
 - (void)selectFrom:(NSString *)entity fetch:(FetchArray)fetch;
 - (void)selectFrom:(NSString *)entity limit:(NSUInteger)limit fetch:(FetchArray)fetch;

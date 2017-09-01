@@ -19,6 +19,8 @@
 
 @class AKCloudMapping;
 
+#import <AnobiKit/AKTypes.h>
+
 #ifndef AKPrivateProtocol_h
 #define AKPrivateProtocol_h
 
@@ -51,7 +53,7 @@
 @property (nonatomic, assign) BOOL enabled;
 - (void)acceptPushNotificationUserInfo:(NSDictionary *)userInfo;
 - (void)smartReplication;
-- (void)totalReplication;
+- (void)totalReplication:(AKBlock)completion;
 - (BOOL)ready;
 @end
 

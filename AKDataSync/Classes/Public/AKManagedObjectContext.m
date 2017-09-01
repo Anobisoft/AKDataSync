@@ -169,15 +169,14 @@
     else NSLog(@"[ERROR] owned cloud manager unordered");
 }
 
-- (void)cloudTotalReplication {
-    if (ownedCloudManager) [ownedCloudManager totalReplication];
+- (void)cloudTotalReplication:(AKBlock)completion {
+    if (ownedCloudManager) [ownedCloudManager totalReplication:completion];
     else NSLog(@"[ERROR] owned cloud manager unordered");
 }
 
 - (void)setCloudEnabled:(BOOL)cloudEnabled {
     if (ownedCloudManager) {
         ownedCloudManager.enabled = cloudEnabled;
-        [self performTotalReplication];
     }
     else NSLog(@"[ERROR] owned cloud manager unordered");
 }
@@ -214,33 +213,47 @@
 
 #pragma mark - Synchronization
 
-- (void)performTotalReplication {
-    if (transactionsAgregator) [self performBlock:^{
-        AKRepresentableTransaction *transaction = [AKRepresentableTransaction instantiateWithContext:self];
-        NSError *error;
-        if ([self save:&error]) {
-            [self saveMainContext];
-        } else {
-            if (error) NSLog(@"[ERROR] saveContext error: %@\n%@", error.localizedDescription, error.userInfo);
-        }
-#if TARGET_OS_IOS
-        for (NSString *entityName in self.cloudMapping.synchronizableEntities) {
-            [transaction addObjects:[NSSet setWithArray:[self selectFrom:entityName]]];
-        }
-#else
-        for (NSEntityDescription *entity in managedObjectModel.entities) {
-            Class class = NSClassFromString([entity managedObjectClassName]);
-            if ([class conformsToProtocol:@protocol(AKMappedObject)]) {
-                [transaction addObjects:[NSSet setWithArray:[self selectFrom:entity.name]]];
-            }
-        }
-#endif
-        [transactionsAgregator context:self willCommitTransaction:transaction];
-        #if TARGET_OS_IOS
-        [self cloudTotalReplication];
-        #endif
-    }];
+BOOL totalReplicationInProgress;
+
+- (BOOL)totalReplicationInProgress {
+    return totalReplicationInProgress;
 }
+
+- (void)performTotalReplication {
+    
+    if (!totalReplicationInProgress && transactionsAgregator) {
+        totalReplicationInProgress = true;
+        [self performBlock:^{
+            AKRepresentableTransaction *transaction = [AKRepresentableTransaction instantiateWithContext:self];
+            NSError *error;
+            if ([self save:&error]) {
+                [self saveMainContext];
+            } else {
+                if (error) NSLog(@"[ERROR] saveContext error: %@\n%@", error.localizedDescription, error.userInfo);
+            }
+#if TARGET_OS_IOS
+            for (NSString *entityName in self.cloudMapping.synchronizableEntities) {
+                [transaction addObjects:[NSSet setWithArray:[self selectFrom:entityName]]];
+            }
+#else
+            for (NSEntityDescription *entity in managedObjectModel.entities) {
+                Class class = NSClassFromString([entity managedObjectClassName]);
+                if ([class conformsToProtocol:@protocol(AKMappedObject)]) {
+                    [transaction addObjects:[NSSet setWithArray:[self selectFrom:entity.name]]];
+                }
+            }
+#endif
+            [transactionsAgregator context:self willCommitTransaction:transaction];
+#if TARGET_OS_IOS
+            [self cloudTotalReplication:^{
+                totalReplicationInProgress = false;
+            }];
+#endif
+        }];
+    }
+}
+
+
 
 - (void)enableWatchSynchronization {    
     [[AKDataAgregator defaultAgregator] addWatchSynchronizableContext:self];

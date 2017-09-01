@@ -20,9 +20,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)instanceWithContainerIdentifier:(NSString *)identifier databaseScope:(AKDatabaseScope)databaseScope;
 + (instancetype)instanceWithConfig:(NSString *)configName;
 
-- (void)totalReplication;
-- (void)smartReplication;
-
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
