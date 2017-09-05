@@ -7,7 +7,7 @@
 //
 
 #import "AKCloudConfig.h"
-#import <AnobiKit/AKConfigs.h>
+#import <AnobiKit/AKConfig.h>
 
 #pragma mark -
 #define AKCloudContainerCFGKey @"AKCloudContainer"
@@ -101,7 +101,7 @@ static NSDictionary<NSString *, NSNumber *> *keyedAKDatabaseScope;
     if (self = [super init]) {
         NSDictionary *configDictionary = nil;
         if (configName) {
-            AKConfigs<NSDictionary *> *configs = [AKConfigs<NSDictionary *> shared];
+            AKConfig<NSDictionary *> *configs = [AKConfig<NSDictionary *> configs];
             configDictionary = configs[configName] ?: configs[@"AKDataSync"];
         }
         
