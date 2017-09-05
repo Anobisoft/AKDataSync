@@ -7,12 +7,12 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <AnobiKit/AKTypes.h>
 #import "AKPrivateProtocol.h"
 
-@interface AKRepresentableTransaction : NSObject <AKRepresentableTransaction>
+@interface AKRepresentableTransaction : NSObject <AKRepresentableTransaction, DisableStdInstantiating>
 
 + (instancetype)instantiateWithContext:(id <AKRepresentableTransaction>)context;
 - (void)addObjects:(NSSet<NSObject<AKMappedObject> *> *)objects;
-- (instancetype)init NS_UNAVAILABLE;
 
 @end

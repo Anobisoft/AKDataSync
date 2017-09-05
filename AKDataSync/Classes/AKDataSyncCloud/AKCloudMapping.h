@@ -7,23 +7,18 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <AnobiKit/AKTypes.h>
 
 #ifndef AKCloudMapping_h
 #define AKCloudMapping_h
 
-@protocol ASKeyedSubscripted <NSObject>
-
-- (NSString *)objectForKeyedSubscript:(NSString *)key;
-
-@end
-
-@interface AKCloudMapping : NSObject <ASKeyedSubscripted> //recordType by entityName
+@interface AKCloudMapping : NSObject <KeyedSubscript> //recordType by entityName
 
 + (instancetype)mappingWithSynchronizableEntities:(NSArray <NSString *> *)entities;
 + (instancetype)mappingWithRecordTypeKeyedByEntityNameDictionary:(NSDictionary <NSString *, NSString *> *)dictionary;
 
-@property (nonatomic, strong, readonly) id <ASKeyedSubscripted> map; //recordType by entityName
-@property (nonatomic, strong, readonly) id <ASKeyedSubscripted> reverseMap; //entityName by recordType
+@property (nonatomic, strong, readonly) id <KeyedSubscript> map; //recordType by entityName
+@property (nonatomic, strong, readonly) id <KeyedSubscript> reverseMap; //entityName by recordType
 - (NSSet <NSString *> *)synchronizableEntities; //all cloud-synchronizable entities
 - (NSSet <NSString *> *)allRecordTypes;
 

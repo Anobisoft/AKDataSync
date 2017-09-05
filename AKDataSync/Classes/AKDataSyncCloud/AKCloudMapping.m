@@ -8,7 +8,7 @@
 
 #import "AKCloudMapping.h"
 
-@interface AKMap : NSObject <ASKeyedSubscripted>
+@interface AKMap : NSObject <KeyedSubscript>
 
 - (void)mapObject:(NSString *)object withKey:(NSString *)key;
 - (NSDictionary *)dictionary;

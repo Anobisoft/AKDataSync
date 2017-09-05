@@ -26,41 +26,19 @@
 
 #pragma mark initalization and state
 
-+ (instancetype)new {
-    return [self sharedInstance];
-}
-
-- (id)copy {
-    return self;
-}
-
-- (id)mutableCopy {
-    return self;
-}
 
 - (void)setAgregator:(id<AKWatchTransactionsAgregator>)agregator {
     _agregator = agregator;
 }
 
-+ (instancetype)sharedInstance {
-    static dispatch_once_t pred;
-    static id shared = nil;
-    dispatch_once(&pred, ^{
-        if (WCSession.isSupported) {
-            shared = [[self alloc] initUniqueInstance];
-        } else {
-            NSLog(@"[ERROR] %s WCSession not supported", __PRETTY_FUNCTION__);
-        }
-    });
-    return shared;
-}
-
-- (instancetype)initUniqueInstance {
-    if (self = [super init]) {
+- (instancetype)init {
+	if (WCSession.isSupported && (self = [super init])) {
         sessionActivationSemaphore = dispatch_semaphore_create(0);
         userInfoQueue = [[NSUserDefaults standardUserDefaults] objectForKey:@"AKWatchConnector.userInfoQueue"];
         if (!userInfoQueue) userInfoQueue = [NSMutableArray new];
-    }
+	} else {
+		NSLog(@"[ERROR] %s WCSession not supported", __PRETTY_FUNCTION__);
+	}
     return self;
 }
 

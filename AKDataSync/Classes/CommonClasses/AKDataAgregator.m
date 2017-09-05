@@ -21,30 +21,13 @@
     NSMutableSet <id<AKDataSyncContextPrivate>> *watchContextSet;
 }
 
-+ (instancetype)new {
-    return [self defaultAgregator];
-}
-
-- (id)copy {
-    return self;
-}
-
-- (id)mutableCopy {
-    return self;
-}
-
 + (instancetype)defaultAgregator {
-    static dispatch_once_t pred;
-    static id shared = nil;
-    dispatch_once(&pred, ^{
-        shared = [[self alloc] initUniqueInstance];
-    });
-    return shared;
+	return [self shared];
 }
 
-- (instancetype)initUniqueInstance {
+- (instancetype)init {
     if (self = [super init]) {
-        self.watchConnector = (id<AKWatchConnector>)AKWatchConnector.sharedInstance;
+        self.watchConnector = (id<AKWatchConnector>)AKWatchConnector.shared;
         [self.watchConnector setAgregator:self];
         watchContextSet = [NSMutableSet new];
 //#warning UNCOMPLETED reload "replication needed" status

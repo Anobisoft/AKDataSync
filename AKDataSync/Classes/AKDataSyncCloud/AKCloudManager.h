@@ -12,17 +12,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface AKCloudManager : NSObject
+@interface AKCloudManager : NSObject <DisableStdInstantiating>
 
 @property (nonatomic, strong, readonly) NSString *instanceIdentifier;
 
 //unique instance for identifier+databaseScope. AKDatabaseScopePrivate - default scope
 + (instancetype)instanceWithContainerIdentifier:(NSString *)identifier databaseScope:(AKDatabaseScope)databaseScope;
 + (instancetype)instanceWithConfig:(NSString *)configName;
-
-+ (instancetype)new NS_UNAVAILABLE;
-- (instancetype)init NS_UNAVAILABLE;
-
 
 @end
 

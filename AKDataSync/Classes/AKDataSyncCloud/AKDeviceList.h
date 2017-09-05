@@ -7,18 +7,16 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <AnobiKit/AKTypes.h>
 #import "AKDevice.h"
 
 @class AKCloudConfig;
 
-@interface AKDeviceList : NSObject <NSFastEnumeration>
+@interface AKDeviceList : NSObject <NSFastEnumeration, DisableStdInstantiating>
 
 - (AKDevice *)thisDevice;
 - (void)addDevice:(AKDevice *)device;
 - (NSArray <AKDevice *> *)devices;
 + (instancetype)listWithConfig:(AKCloudConfig *)config;
-
-+ (instancetype)new NS_UNAVAILABLE;
-- (instancetype)init NS_UNAVAILABLE;
 
 @end

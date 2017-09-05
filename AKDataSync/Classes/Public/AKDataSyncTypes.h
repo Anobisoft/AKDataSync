@@ -9,6 +9,8 @@
 #ifndef AKDataSyncTypes_h
 #define AKDataSyncTypes_h
 
+#import <AnobiKit/AKTypes.h>
+
 typedef NS_ENUM(NSInteger, AKDatabaseScope) {
     AKDatabaseScopeDefault = 0,
     AKDatabaseScopePublic,

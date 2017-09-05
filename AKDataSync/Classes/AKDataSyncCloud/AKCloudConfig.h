@@ -9,7 +9,31 @@
 #import <Foundation/Foundation.h>
 #import "AKDataSyncTypes.h"
 
-@interface AKCloudConfig : NSObject
+#pragma mark -
+#define AKCloudContainerCFGKey @"AKCloudContainer"
+#define AKCloudDatabaseScopeCFGKey @"AKCloudDatabaseScope"
+
+#define AKDatabaseScopePublicKey @"PUBLIC"
+#define AKDatabaseScopePrivateKey @"PRIVATE"
+#define AKDatabaseScopeSharedKey @"SHARED"
+
+#pragma mark -
+#define AKCloudRealModificationDateFieldNameCFGKey @"AKCloudRealModificationDateFieldName"
+#define AKCloudDeviceRecordTypeCFGKey @"AKCloudDeviceRecordType"
+#define AKCloudDeletionInfoRecordTypeCFGKey @"AKCloudDeletionInfoRecordType"
+
+#pragma mark -
+#define AKCloudDeletionInfo_deviceIDFieldNameCFGKey @"AKCloudDeletionInfo_deviceIDFieldName"
+#define AKCloudDeletionInfo_recordIDFieldNameCFGKey @"AKCloudDeletionInfo_recordIDFieldName"
+#define AKCloudDeletionInfo_recordTypeFieldNameCFGKey @"AKCloudDeletionInfo_recordTypeFieldName"
+
+#pragma mark -
+#define AKCloudInitTimeoutCFGKey @"AKCloudInitTimeout"
+#define AKCloudTryToPushTimeoutCFGKey @"AKCloudTryToPushTimeout"
+#define AKCloudSmartReplicationTimeoutCFGKey @"AKCloudSmartReplicationTimeout"
+
+
+@interface AKCloudConfig : NSObject <DisableStdInstantiating>
 
 @property (readonly) NSString *containerIdentifier;
 @property (readonly) AKDatabaseScope databaseScope;
@@ -29,8 +53,5 @@
 
 + (instancetype)configWithName:(NSString *)configName;
 + (instancetype)configWithContainerIdentifier:(NSString *)identifier databaseScope:(AKDatabaseScope)databaseScope;
-
-+ (instancetype)new NS_UNAVAILABLE;
-- (instancetype)init NS_UNAVAILABLE;
 
 @end

@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <WatchConnectivity/WatchConnectivity.h>
+#import <AnobiKit/AKTypes.h>
 
 
 @protocol AKWatchConnectorDelegate;
@@ -17,19 +18,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface AKWatchConnector : NSObject <WCSessionDelegate> {
+@interface AKWatchConnector : AKSingleton <WCSessionDelegate> {
     @protected BOOL sessionActivated;
 }
 
 @property (nonatomic, weak, nullable) id <AKWatchConnectorDelegate> delegate;
 @property (nonatomic, assign, readonly) BOOL ready;
-
-+ (instancetype)sharedInstance;
-
-- (instancetype)init NS_UNAVAILABLE;
-- (id)copy NS_UNAVAILABLE;
-- (id)mutableCopy NS_UNAVAILABLE;
-
 
 @end
 
