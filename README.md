@@ -6,6 +6,8 @@
 [![Platform](https://img.shields.io/cocoapods/p/AKDataSync.svg?style=flat)](http://cocoapods.org/pods/AKDataSync)
 [![Twitter](https://img.shields.io/badge/twitter-@Anobisoft-blue.svg?style=flat)](http://twitter.com/Anobisoft)
 
+Automated CoreData synchronization with iCloud
+
 ## Example
 
 To run the example project, clone the repo, and run `pod install` from the Example directory first.
