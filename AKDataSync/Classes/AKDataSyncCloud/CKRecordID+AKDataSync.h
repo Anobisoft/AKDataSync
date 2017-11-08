@@ -7,6 +7,7 @@
 //
 
 #import <CloudKit/CloudKit.h>
+#import "AKUUID.h"
 
 @interface CKRecordID (AKDataSync)
 
@@ -14,7 +15,7 @@
 + (instancetype)recordIDWithUUIDString:(NSString *)UUIDString;
 
 - (NSString *)UUIDString;
-- (NSUUID *)UUID;
+- (AKUUID *)UUID;
 - (NSData *)uniqueData;
 
 @end

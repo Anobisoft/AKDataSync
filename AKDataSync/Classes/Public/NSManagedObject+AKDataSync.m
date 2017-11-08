@@ -8,6 +8,7 @@
 
 #import "NSManagedObject+AKDataSync.h"
 #import "AKUUID.h"
+#import "AKManagedObjectContext.h"
 
 @implementation NSManagedObject (AKDataSync)
 
@@ -26,35 +27,31 @@
     return nil;
 }
 
-+ (void)selectObjectsInContext:(NSManagedObjectContext *)context fetch:(FetchArray)fetch {
-    [self selectObjectsInContext:context limit:0 fetch:fetch];
++ (void)fetch:(FetchArray)fetch {
+    [self fetch:fetch limit:0];
+}
++ (void)fetch:(FetchArray)fetch limit:(NSUInteger)limit {
+    [self fetch:fetch orderBy:nil limit:limit];
 }
 
-+ (void)selectObjectsInContext:(NSManagedObjectContext *)context limit:(NSUInteger)limit fetch:(FetchArray)fetch {
-    [self selectObjectsInContext:context orderBy:nil limit:limit fetch:fetch];
++ (void)fetch:(FetchArray)fetch orderBy:(NSArray <NSSortDescriptor *> *)sortDescriptors {
+    [self fetch:fetch orderBy:sortDescriptors limit:0];
+}
++ (void)fetch:(FetchArray)fetch orderBy:(NSArray <NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit {
+    [self fetch:fetch where:nil orderBy:sortDescriptors limit:limit];
 }
 
-+ (void)selectObjectsInContext:(NSManagedObjectContext *)context orderBy:(NSArray<NSSortDescriptor *> *)sortDescriptors fetch:(FetchArray)fetch {
-    [self selectObjectsInContext:context orderBy:sortDescriptors limit:0 fetch:fetch];
++ (void)fetch:(FetchArray)fetch where:(NSPredicate *)clause {
+    [self fetch:fetch where:clause limit:0];
 }
-
-+ (void)selectObjectsInContext:(NSManagedObjectContext *)context orderBy:(nullable NSArray <NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit fetch:(FetchArray)fetch {
-    [self selectObjectsInContext:context where:nil orderBy:sortDescriptors limit:limit fetch:fetch];
++ (void)fetch:(FetchArray)fetch where:(NSPredicate *)clause limit:(NSUInteger)limit {
+    [self fetch:fetch where:clause orderBy:nil limit:limit];
 }
-
-+ (void)selectObjectsInContext:(NSManagedObjectContext *)context where:(NSPredicate *)clause fetch:(FetchArray)fetch {
-    [self selectObjectsInContext:context where:clause limit:0 fetch:fetch];
++ (void)fetch:(FetchArray)fetch where:(NSPredicate *)clause orderBy:(NSArray <NSSortDescriptor *> *)sortDescriptors {
+    [self fetch:fetch where:clause orderBy:sortDescriptors limit:0];
 }
-
-+ (void)selectObjectsInContext:(NSManagedObjectContext *)context where:(NSPredicate *)clause limit:(NSUInteger)limit fetch:(FetchArray)fetch {
-    [self selectObjectsInContext:context where:clause orderBy:nil limit:limit fetch:fetch];
-}
-
-+ (void)selectObjectsInContext:(NSManagedObjectContext *)context where:(NSPredicate *)clause orderBy:(nullable NSArray <NSSortDescriptor *> *)sortDescriptors fetch:(FetchArray)fetch {
-    [self selectObjectsInContext:context where:clause orderBy:sortDescriptors limit:0 fetch:fetch];
-}
-
-+ (void)selectObjectsInContext:(NSManagedObjectContext *)context where:(NSPredicate *)clause orderBy:(nullable NSArray <NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit fetch:(FetchArray)fetch {
++ (void)fetch:(FetchArray)fetch where:(NSPredicate *)clause orderBy:(NSArray <NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit {
+    AKManagedObjectContext *context = [AKManagedObjectContext defaultContext];
     [context performBlock:^{
         NSFetchRequest *request = [self fetchRequest];
         request.predicate = clause;
@@ -66,5 +63,7 @@
         fetch(entities);
     }];
 }
+
+
 
 @end

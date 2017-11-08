@@ -1,7 +1,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'AKDataSync'
-  s.version          = '0.0.15'
+  s.version          = '0.0.16'
   s.summary          = 'AKDataSync - Automated CoreData synchronization with iCloud'
   s.description      = <<-DESC
 TODO: Add long description of the pod here.
@@ -36,6 +36,6 @@ DESC
   s.requires_arc = true
 
 # s.xcconfig = { "HEADER_SEARCH_PATHS" => "$(SDKROOT)/usr/include/libxml2" }
-  s.dependency "AnobiKit", '~> 0.1.17'
+  s.dependency "AnobiKit", '~> 0.1.18'
 
 end

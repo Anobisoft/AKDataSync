@@ -26,7 +26,7 @@
 
 - (id <AKDescription>)descriptionOfDeletedObjectWithMapping:(AKCloudMapping *)mapping config:(AKCloudConfig *)config {
     return [AKCloudDescriptionRepresentation instantiateWithRecordType:self[config.recordTypeFieldName]
-                                                            uniqueData:[NSUUID UUIDWithUUIDString:self[config.recordIDFieldName]].data mapping:mapping];
+                                                            uniqueData:[AKUUID UUIDWithUUIDString:self[config.recordIDFieldName]].data mapping:mapping];
 }
 
 - (id <AKMappedObject>)mappedObjectWithMapping:(AKCloudMapping *)mapping config:(AKCloudConfig *)config {

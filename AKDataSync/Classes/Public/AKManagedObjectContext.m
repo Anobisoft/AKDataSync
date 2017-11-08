@@ -9,35 +9,11 @@
 #import "AKManagedObjectContext.h"
 #import "AKRepresentableTransaction.h"
 #import "AKDescriptionRepresentation.h"
-#import "NSManagedObjectContext+AnobiKit.h"
 #import "AKPrivateProtocol.h"
-#import "AKUUID.h"
 #import "AKDataAgregator.h"
 
-//#import <UIKit/UIKit.h>
-
-#import <objc/runtime.h>
-
-@implementation NSManagedObject(swentityName)
-
-+ (NSString *)swentityName {
-    NSString *atatentity;
-    @try {
-        atatentity = [self swentityName];
-    } @catch (NSException *exception) {
-        NSLog(@"[ERROR] %s %@", __PRETTY_FUNCTION__, exception);
-    } @finally {
-        if (atatentity) {
-            return atatentity;
-        } else {
-            NSLog(@"[ERROR] %s return null. WTF?! swizzle return className: %@", __PRETTY_FUNCTION__, NSStringFromClass(self.class));
-            return NSStringFromClass(self.class);
-        }
-    }
-}
-
-@end
-
+#import "NSManagedObjectContext+AnobiKit.h"
+#import "AKUUID.h"
 
 @interface FoundObjectWithRelationRepresentation : NSObject
 
@@ -73,32 +49,6 @@
     AKCloudMapping *cloudMapping;
 #endif
 }
-
-+ (void)swixManagedObjectEntityNameMethod {
-    Class class = [NSManagedObject class];
-    
-    SEL originalSelector = @selector(entityName);
-    SEL swizzledSelector = @selector(swentityName);
-    
-    Method originalMethod = class_getClassMethod(class, originalSelector);
-    Method swizzledMethod = class_getClassMethod(class, swizzledSelector);
-    
-    BOOL didAddMethod =
-    class_addMethod(class,
-                    originalSelector,
-                    method_getImplementation(swizzledMethod),
-                    method_getTypeEncoding(swizzledMethod));
-    
-    if (didAddMethod) {
-        class_replaceMethod(class,
-                            swizzledSelector,
-                            method_getImplementation(originalMethod),
-                            method_getTypeEncoding(originalMethod));
-    } else {
-        method_exchangeImplementations(originalMethod, swizzledMethod);
-    }
-}
-
 
 @synthesize delegate = _delegate;
 
@@ -528,7 +478,6 @@ BOOL totalReplicationInProgress;
 
 + (void)initialize {
     [super initialize];
-    [self swixManagedObjectEntityNameMethod];
 }
 
 + (instancetype)defaultContext {
@@ -594,7 +543,7 @@ BOOL totalReplicationInProgress;
         NSString *entityClassName = [[NSEntityDescription entityForName:entityName inManagedObjectContext:self] managedObjectClassName];
         if ([NSClassFromString(entityClassName) conformsToProtocol:@protocol(AKMutableReference)]) {
             NSManagedObject <AKMutableReference> *mutableReference = (NSManagedObject <AKMutableReference> *)object;
-            mutableReference.uniqueData = [[NSUUID UUID] data];
+            mutableReference.uniqueData = [AKUUID UUID].data;
         }
         fetch(object);
     }];
@@ -603,41 +552,27 @@ BOOL totalReplicationInProgress;
 - (void)selectFrom:(NSString *)entity fetch:(FetchArray)fetch {
     [self selectFrom:entity limit:0 fetch:fetch];
 }
-
 - (void)selectFrom:(NSString *)entity limit:(NSUInteger)limit fetch:(FetchArray)fetch {
     [self selectFrom:entity orderBy:nil limit:limit fetch:fetch];
 }
-
 - (void)selectFrom:(NSString *)entity orderBy:(nullable NSArray <NSSortDescriptor *> *)sortDescriptors fetch:(FetchArray)fetch {
     [self selectFrom:entity orderBy:sortDescriptors limit:0 fetch:fetch];
 }
-
 - (void)selectFrom:(NSString *)entity orderBy:(nullable NSArray <NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit fetch:(FetchArray)fetch {
     [self selectFrom:entity where:nil orderBy:sortDescriptors limit:limit fetch:fetch];
 }
-
 - (void)selectFrom:(NSString *)entity where:(NSPredicate *)clause fetch:(FetchArray)fetch {
     [self selectFrom:entity where:clause limit:0 fetch:fetch];
 }
-
 - (void)selectFrom:(NSString *)entity where:(NSPredicate *)clause limit:(NSUInteger)limit fetch:(FetchArray)fetch {
     [self selectFrom:entity where:clause orderBy:nil limit:limit fetch:fetch];
 }
-
 - (void)selectFrom:(NSString *)entity where:(NSPredicate *)clause orderBy:(nullable NSArray <NSSortDescriptor *> *)sortDescriptors fetch:(FetchArray)fetch {
     [self selectFrom:entity where:clause orderBy:sortDescriptors limit:0 fetch:fetch];
 }
-
 - (void)selectFrom:(NSString *)entity where:(NSPredicate *)clause orderBy:(nullable NSArray <NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit fetch:(FetchArray)fetch {
     [self performBlock:^{
-        NSFetchRequest *request = [[NSFetchRequest alloc] initWithEntityName:entity];
-        request.predicate = clause;
-        [request setSortDescriptors:sortDescriptors];
-        [request setFetchLimit:limit];
-        NSError *error = nil;
-        NSArray *entities = [self executeFetchRequest:request error:&error];
-        if (error) NSLog(@"[ERROR] %s %@\n%@", __PRETTY_FUNCTION__, error.localizedDescription, error.userInfo);
-        fetch(entities);
+        fetch([self selectFrom:entity where:clause orderBy:sortDescriptors limit:limit]);
     }];
 }
 

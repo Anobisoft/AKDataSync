@@ -9,12 +9,13 @@
 #import <Foundation/Foundation.h>
 #import "AKObjectRepresentation.h"
 #import "AKCloudConfig.h"
+#import "AKUUID.h"
 
 @interface AKDevice : AKObjectRepresentation <AKMutableMappedObject, AKMutableReference>
 
 + (instancetype)deviceWithMappedObject:(id <AKMappedObject>)mappedObject config:(AKCloudConfig *)config;
 
-- (void)setUUID:(NSUUID *)UUID;
+- (void)setUUID:(AKUUID *)UUID;
 - (void)setUUIDString:(NSString *)UUIDString;
 
 @end

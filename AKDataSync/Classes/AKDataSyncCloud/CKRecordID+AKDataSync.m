@@ -7,7 +7,7 @@
 //
 
 #import "CKRecordID+AKDataSync.h"
-#import "AKUUID.h"
+
 
 @implementation CKRecordID (AKDataSync)
 
@@ -23,8 +23,8 @@
     return self.recordName;
 }
 
-- (NSUUID *)UUID {
-    return [[NSUUID alloc] initWithUUIDString:self.UUIDString];
+- (AKUUID *)UUID {
+    return [[AKUUID alloc] initWithUUIDString:self.UUIDString];
 }
 
 - (NSData *)uniqueData {

@@ -7,7 +7,6 @@
 //
 
 #import "AKDevice.h"
-#import "AKUUID.h"
 
 @interface AKObjectRepresentation(protected)
 
@@ -30,12 +29,12 @@
     return self;
 }
 
-- (void)setUUID:(NSUUID *)UUID {
+- (void)setUUID:(AKUUID *)UUID {
     _uniqueData = UUID.data;
 }
 
 - (void)setUUIDString:(NSString *)UUIDString {
-    _uniqueData = [NSUUID UUIDWithUUIDString:UUIDString].data;
+    _uniqueData = [AKUUID UUIDWithUUIDString:UUIDString].data;
 }
 
 - (void)setUniqueData:(NSData *)uniqueData {

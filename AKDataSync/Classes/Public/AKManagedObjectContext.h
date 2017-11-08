@@ -10,8 +10,8 @@
 #import "AKDataSyncTypes.h"
 #import "AKPublicProtocol.h"
 #import "NSManagedObject+AKDataSync.h"
-#import <AnobiKit/AKTypes.h>
 
+#import <AnobiKit/AKTypes.h>
 
 #define ASC ascending:true
 #define DESC ascending:false
@@ -23,7 +23,7 @@ typedef void (^FetchObject)(__kindof NSManagedObject *object);
 @interface AKManagedObjectContext : NSManagedObjectContext <AKDataSyncContext>
 
 - (instancetype)initWithConcurrencyType:(NSManagedObjectContextConcurrencyType)ct NS_UNAVAILABLE;
-- (instancetype)initWithStoreURL:(NSURL *)storeURL modelURL:(nullable NSURL *)modelURL NS_DESIGNATED_INITIALIZER API_AVAILABLE(ios(9.0),watchos(2.0));
+- (instancetype)initWithStoreURL:(NSURL *)storeURL modelURL:(nullable NSURL *)modelURL;
 - (instancetype)initWithStoreURL:(NSURL *)storeURL;
 
 + (instancetype)defaultContext;
