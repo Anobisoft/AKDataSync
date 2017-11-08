@@ -13,11 +13,11 @@
 @implementation NSManagedObject (AKDataSync)
 
 - (NSString *)entityName {
-    return [NSString stringWithString:self.entity.name];
+    return self.entity.name;
 }
 
 + (NSString *)entityName {
-    return [NSString stringWithString:self.entity.name];
+    return self.entity.name;
 }
 
 - (NSString *)UUIDString {
