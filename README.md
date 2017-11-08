@@ -29,7 +29,7 @@ pod "AKDataSync"
 
 ## Author
 
-Anobisoft, anobisoft@gmail.com
+Stanislav Pletnev, anobisoft@gmail.com
 
 ## License
 
