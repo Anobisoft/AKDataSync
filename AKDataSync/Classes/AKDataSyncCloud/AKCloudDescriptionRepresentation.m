@@ -7,7 +7,7 @@
 //
 
 #import "AKCloudDescriptionRepresentation.h"
-#import "NSUUID+AnobiKit.h"
+#import "AKUUID.h"
 #import "AKCloudMapping.h"
 
 @implementation AKCloudDescriptionRepresentation {

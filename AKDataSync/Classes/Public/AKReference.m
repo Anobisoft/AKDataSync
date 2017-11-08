@@ -8,7 +8,7 @@
 
 #import "AKReference.h"
 #import "AKPublicProtocol.h"
-#import "NSUUID+AnobiKit.h"
+#import "AKUUID.h"
 
 #define AKDataSync_uniqueDataKey @"AKDataSync_uniqueData"
 

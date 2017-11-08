@@ -7,7 +7,7 @@
 //
 
 #import "AKDevice.h"
-#import "NSUUID+AnobiKit.h"
+#import "AKUUID.h"
 
 @interface AKObjectRepresentation(protected)
 

@@ -11,7 +11,7 @@
 #import "AKDescriptionRepresentation.h"
 #import "NSManagedObjectContext+AnobiKit.h"
 #import "AKPrivateProtocol.h"
-#import "NSUUID+AnobiKit.h"
+#import "AKUUID.h"
 #import "AKDataAgregator.h"
 
 //#import <UIKit/UIKit.h>

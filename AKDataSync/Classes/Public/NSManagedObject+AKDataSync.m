@@ -7,7 +7,7 @@
 //
 
 #import "NSManagedObject+AKDataSync.h"
-#import "NSUUID+AnobiKit.h"
+#import "AKUUID.h"
 
 @implementation NSManagedObject (AKDataSync)
 

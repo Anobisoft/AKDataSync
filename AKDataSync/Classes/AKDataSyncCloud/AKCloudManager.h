@@ -12,7 +12,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface AKCloudManager : NSObject <DisableStdInstantiating>
+@interface AKCloudManager : NSObject <DisableNSInit>
 
 @property (nonatomic, strong, readonly) NSString *instanceIdentifier;
 

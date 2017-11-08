@@ -8,7 +8,7 @@
 
 #import "CKRecord+AKDataSync.h"
 #import "AKCloudRecordRepresentation.h"
-#import "NSUUID+AnobiKit.h"
+#import "AKUUID.h"
 #import "CKRecordID+AKDataSync.h"
 #import "CKReference+AKDataSync.h"
 #import "AKCloudMapping.h"

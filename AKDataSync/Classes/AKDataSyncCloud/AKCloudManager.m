@@ -23,8 +23,7 @@
 #import "CKRecordID+AKDataSync.h"
 #import "CKReference+AKDataSync.h"
 
-
-#import <AnobiKit/NSUUID+AnobiKit.h>
+#import <AnobiKit/AKUUID.h>
 #import <AnobiKit/NSDate+AnobiKit.h>
 
 @interface NSMapTable<KeyType, ObjectType> (ASKeyedSubscripted)
@@ -193,9 +192,9 @@ static NSMapTable<NSString *, id> *instancesByConfig;
             db = container.sharedCloudDatabase;
             dbScopeString = @"Shared";
             break;
-        default:
-            dbScopeString = @"Private";
+        default:            
             db = container.privateCloudDatabase;
+            dbScopeString = @"Private";
             break;
     }
     _instanceIdentifier = [NSString stringWithFormat:@"%@%@-%@", NSStringFromClass(self.class), dbScopeString, container.containerIdentifier];
@@ -436,7 +435,9 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
         } else {            
             [self recordByRecordID:notification.recordID fetch:^(CKRecord <AKMappedObject>*record, NSError * _Nullable error) {
                 if (record) {
+                    #ifdef DEBUG
                     NSLog(@"[DEBUG] found record %@", record);
+                    #endif
                     NSString *entityName = self.mapping.reverseMap[record.recordType];
                     if ([record.recordType isEqualToString:config.deletionInfoRecordType]) {
                         [_recievedDeletionInfoRecords addObject:record];

@@ -15,4 +15,4 @@
 #pragma mark - AnobiKit
 
 #import <AnobiKit/NSManagedObjectContext+AnobiKit.h>
-#import <AnobiKit/NSUUID+AnobiKit.h>
+#import <AnobiKit/AKUUID.h>

@@ -9,7 +9,7 @@
 #import "AKDeviceList.h"
 #import <UIKit/UIKit.h>
 #import <sys/utsname.h>
-#import "NSUUID+AnobiKit.h"
+#import "AKUUID.h"
 #import <Security/Security.h>
 
 NSString* machine()

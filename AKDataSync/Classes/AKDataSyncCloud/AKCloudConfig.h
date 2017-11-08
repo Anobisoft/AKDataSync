@@ -33,7 +33,7 @@
 #define AKCloudSmartReplicationTimeoutCFGKey @"AKCloudSmartReplicationTimeout"
 
 
-@interface AKCloudConfig : NSObject <DisableStdInstantiating>
+@interface AKCloudConfig : NSObject <DisableNSInit>
 
 @property (readonly) NSString *containerIdentifier;
 @property (readonly) AKDatabaseScope databaseScope;

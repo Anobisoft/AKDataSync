@@ -10,7 +10,7 @@
 #import <AnobiKit/AKTypes.h>
 #import "AKPrivateProtocol.h"
 
-@interface AKRepresentableTransaction : NSObject <AKRepresentableTransaction, DisableStdInstantiating>
+@interface AKRepresentableTransaction : NSObject <AKRepresentableTransaction, DisableNSInit>
 
 + (instancetype)instantiateWithContext:(id <AKRepresentableTransaction>)context;
 - (void)addObjects:(NSSet<NSObject<AKMappedObject> *> *)objects;

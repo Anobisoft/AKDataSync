@@ -12,7 +12,7 @@
 
 @class AKCloudConfig;
 
-@interface AKDeviceList : NSObject <NSFastEnumeration, DisableStdInstantiating>
+@interface AKDeviceList : NSObject <NSFastEnumeration, DisableNSInit>
 
 - (AKDevice *)thisDevice;
 - (void)addDevice:(AKDevice *)device;
