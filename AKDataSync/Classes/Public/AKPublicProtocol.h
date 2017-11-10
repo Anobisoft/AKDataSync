@@ -108,6 +108,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol AKDataSyncContextDelegate <NSObject>
 @optional
 - (void)reloadData;
+- (void)iCloudNoAccount;
 @end
 
 @protocol AKDataSyncSearchableContext <NSObject>

@@ -26,6 +26,8 @@
 #import <AnobiKit/AKUUID.h>
 #import <AnobiKit/NSDate+AnobiKit.h>
 
+#pragma mark -
+
 @interface NSMapTable<KeyType, ObjectType> (ASKeyedSubscripted)
 - (ObjectType)objectForKeyedSubscript:(KeyType <NSCopying>)key;
 - (void)setObject:(ObjectType)obj forKeyedSubscript:(KeyType <NSCopying>)key;
@@ -44,24 +46,22 @@
 typedef void (^FetchRecord)(__kindof CKRecord *record);
 typedef void (^FetchRecordsArray)(NSArray <__kindof CKRecord *> *records);
 
-typedef NS_ENUM(NSUInteger, AKCloudState) {
-    AKCloudStateAccountStatusAvailable = 1 << 0,
-    AKCloudStateThisDeviceUpdated = 1 << 1,
-    AKCloudStateDevicesReloaded = 1 << 2,
-};
+#pragma mark -
 
 @interface AKCloudManager() <AKCloudManager>
-    @property (nonatomic, strong, readonly) NSDictionary <NSString *, NSDate *> *maxCloudModificationDateForEntity;
-    - (void)setMaxCloudModificationDate:(NSDate *)date forEntity:(NSString *)entity;
 
-    
+@property (nonatomic, strong, readonly) NSDictionary <NSString *, NSDate *> *maxCloudModificationDateForEntity;
+@property (nonatomic) AKCloudState initState;
+- (void)setMaxCloudModificationDate:(NSDate *)date forEntity:(NSString *)entity;
+
 @end
+
+#pragma mark -
 
 @implementation AKCloudManager {
     id <AKDataSyncContextPrivate, AKCloudManagerOwner> syncContext;
     AKCloudConfig *config;
-    
-    AKCloudState state;
+
     CKContainer *container;
     CKDatabase *db;
     
@@ -82,6 +82,13 @@ typedef NS_ENUM(NSUInteger, AKCloudState) {
     
 }
 
+@synthesize initState = _initState;
+- (void)setInitState:(AKCloudState)initState {
+    _initState = initState;
+    if (syncContext) {
+        [syncContext cloudManager:self didChangeState:initState];
+    }
+}
 
 #pragma mark - Private Properties
 
@@ -262,14 +269,13 @@ static NSMapTable<NSString *, id> *instancesByConfig;
         if (error) {
             NSLog(@"[ERROR] %@", error.localizedDescription);
         }
+        self.initState = (AKCloudState)accountStatus;
         if (accountStatus == CKAccountStatusAvailable) {
-            state |= AKCloudStateAccountStatusAvailable;
             [self updateDevicesCompletion:^{
                 dispatch_group_leave(primaryInitializationGroup);
                 if (completion) completion();
             }];
         } else {
-            state ^= state & AKCloudStateAccountStatusAvailable;
             dispatch_group_leave(primaryInitializationGroup);
             if (completion) completion();
         }
@@ -300,23 +306,17 @@ static NSMapTable<NSString *, id> *instancesByConfig;
 #ifdef DEBUG
                     NSLog(@"[DEBUG] pushDevice success");
 #endif
-                    state |= AKCloudStateThisDeviceUpdated;
+                    self.initState = AKCloudStateThisDeviceUpdated;
                     [self loadAllDevisesCompletion:^{
                         if (completion) completion();
                     }];
                 } else {
-#ifdef DEBUG
-                    NSLog(@"[DEBUG] pushDevice unsuccess");
-#endif
-                    state ^= state & AKCloudStateThisDeviceUpdated;
+                    NSLog(@"[WARNING] pushDevice unsuccess");
                     if (completion) completion();
                 }
             }];
         } else {
-#ifdef DEBUG
-            NSLog(@"[DEBUG] enqueueUpdateThisDevice unsuccess");
-#endif
-            state ^= state & AKCloudStateThisDeviceUpdated;
+            NSLog(@"[WARNING] enqueueUpdateThisDevice unsuccess");
             if (completion) completion();
         }
     }];
@@ -336,9 +336,9 @@ static NSMapTable<NSString *, id> *instancesByConfig;
                 AKDevice *device = [AKDevice deviceWithMappedObject:record config:config];
                 [deviceList addDevice:device];
             }
-            state |= AKCloudStateDevicesReloaded;
+            self.initState = AKCloudStateDevicesReloaded;
         } else {
-            state ^= state & AKCloudStateDevicesReloaded;
+//            state ^= state & AKCloudStateDevicesReloaded;
         }
         if (completion) completion();
     }];
@@ -465,8 +465,8 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
 #pragma mark - AKCloudManager
 
 - (BOOL)ready {
-    AKCloudState requiredState = AKCloudStateAccountStatusAvailable | AKCloudStateThisDeviceUpdated | AKCloudStateDevicesReloaded;
-    return (state & requiredState) == requiredState;
+//    AKCloudState requiredState = AKCloudStateAccountStatusAvailable | AKCloudStateThisDeviceUpdated | AKCloudStateDevicesReloaded;
+    return self.initState == AKCloudStateReady;
 }
 
 - (void)setDataSyncContext:(id<AKDataSyncContextPrivate, AKCloudManagerOwner>)context {

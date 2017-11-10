@@ -135,6 +135,9 @@
     return ownedCloudManager ? ownedCloudManager.enabled : false;
 }
 
+#pragma mark -
+#pragma mark - AKCloudManagerOwner
+
 - (AKCloudMapping *)cloudMapping {
     if (!cloudMapping) {
         cloudMapping = [AKCloudMapping new];
@@ -157,10 +160,24 @@
     }
     return cloudMapping;
 }
+
+- (void)cloudManager:(id<AKCloudManager>)cloudManager didChangeState:(AKCloudState)state {
+    switch (state) {
+        case AKCloudStateAccountStatusNoAccount:
+            if (self.delegate && [self.delegate respondsToSelector:@selector(iCloudNoAccount)]) {
+                [self.delegate iCloudNoAccount];
+            }
+            break;
+        default:
+            NSLog(@"WTF?!");
+            break;
+    }
+}
+
 #endif
 
 
-
+#pragma mark -
 #pragma mark - Synchronization
 
 BOOL totalReplicationInProgress;

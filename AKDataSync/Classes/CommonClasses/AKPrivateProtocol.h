@@ -19,7 +19,7 @@
 
 @class AKCloudMapping;
 
-#import <AnobiKit/AKTypes.h>
+#import <AKDataSync/AKDataSyncTypes.h>
 
 #ifndef AKPrivateProtocol_h
 #define AKPrivateProtocol_h
@@ -60,6 +60,7 @@
 @protocol AKCloudManagerOwner <NSObject>
 @property (strong) id<AKCloudManager> cloudManager;
 - (AKCloudMapping *)cloudMapping;
+- (void)cloudManager:(id<AKCloudManager>)cloudManager didChangeState:(AKCloudState)state;
 @end
 #endif
 
