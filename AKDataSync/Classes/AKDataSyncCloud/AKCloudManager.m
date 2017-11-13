@@ -228,9 +228,6 @@ static NSMapTable<NSString *, id> *instancesByConfig;
         [self removeAllSubscriptionsCompletion:nil];
     }
 }
-- (BOOL)enabled {
-    return _enabled;
-}
 
 - (void)tryPerformInit {
 #ifdef DEBUG

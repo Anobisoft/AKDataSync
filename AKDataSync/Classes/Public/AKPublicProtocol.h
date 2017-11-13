@@ -3,7 +3,7 @@
 //  AKDataSync
 //
 //  Created by Stanislav Pletnev on 11.06.16.
-//  Copyright © 2016 Anobisoft.com. All rights reserved.
+//  Copyright © 2016 Anobisoft. All rights reserved.
 //
 
 @protocol AKManagedObject;
@@ -108,7 +108,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol AKDataSyncContextDelegate <NSObject>
 @optional
 - (void)reloadData;
-- (void)iCloudNoAccount;
+- (void)iCloudNoAccountAction:(void (^)(BOOL enable))action;
 @end
 
 @protocol AKDataSyncSearchableContext <NSObject>

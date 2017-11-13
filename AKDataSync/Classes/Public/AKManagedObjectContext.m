@@ -3,7 +3,7 @@
 //  AKDataSync
 //
 //  Created by Stanislav Pletnev on 11.06.16.
-//  Copyright © 2016 Anobisoft.com. All rights reserved.
+//  Copyright © 2016 Anobisoft. All rights reserved.
 //
 
 #import "AKManagedObjectContext.h"
@@ -164,8 +164,15 @@
 - (void)cloudManager:(id<AKCloudManager>)cloudManager didChangeState:(AKCloudState)state {
     switch (state) {
         case AKCloudStateAccountStatusNoAccount:
-            if (self.delegate && [self.delegate respondsToSelector:@selector(iCloudNoAccount)]) {
-                [self.delegate iCloudNoAccount];
+            if (self.delegate && [self.delegate respondsToSelector:@selector(iCloudNoAccountAction:)]) {
+                [self.delegate iCloudNoAccountAction:^(BOOL enable) {
+                    if (enable) {
+                        NSURL *iCloudPrefs = [NSURL URLWithString:@"prefs:root=CASTLE"];
+                        [[UIApplication sharedApplication] openURL:iCloudPrefs options:@{} completionHandler:nil];
+                    } else {
+                        self.cloudEnabled = false;
+                    }
+                }];
             }
             break;
         default:
@@ -173,6 +180,10 @@
             break;
     }
 }
+
+
+
+
 
 #endif
 
