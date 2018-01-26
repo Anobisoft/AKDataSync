@@ -16,7 +16,7 @@
 
 - (AKDevice *)thisDevice;
 - (void)addDevice:(AKDevice *)device;
-- (NSArray <AKDevice *> *)devices;
+- (NSArray<AKDevice *> *)devices;
 + (instancetype)listWithConfig:(AKCloudConfig *)config;
 
 @end

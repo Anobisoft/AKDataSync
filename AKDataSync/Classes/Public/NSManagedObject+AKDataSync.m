@@ -27,30 +27,30 @@
     return nil;
 }
 
-+ (void)fetch:(FetchArray)fetch {
++ (void)fetch:(FetchArrayBlock)fetch {
     [self fetch:fetch limit:0];
 }
-+ (void)fetch:(FetchArray)fetch limit:(NSUInteger)limit {
++ (void)fetch:(FetchArrayBlock)fetch limit:(NSUInteger)limit {
     [self fetch:fetch orderBy:nil limit:limit];
 }
 
-+ (void)fetch:(FetchArray)fetch orderBy:(NSArray <NSSortDescriptor *> *)sortDescriptors {
++ (void)fetch:(FetchArrayBlock)fetch orderBy:(NSArray<NSSortDescriptor *> *)sortDescriptors {
     [self fetch:fetch orderBy:sortDescriptors limit:0];
 }
-+ (void)fetch:(FetchArray)fetch orderBy:(NSArray <NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit {
++ (void)fetch:(FetchArrayBlock)fetch orderBy:(NSArray<NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit {
     [self fetch:fetch where:nil orderBy:sortDescriptors limit:limit];
 }
 
-+ (void)fetch:(FetchArray)fetch where:(NSPredicate *)clause {
++ (void)fetch:(FetchArrayBlock)fetch where:(NSPredicate *)clause {
     [self fetch:fetch where:clause limit:0];
 }
-+ (void)fetch:(FetchArray)fetch where:(NSPredicate *)clause limit:(NSUInteger)limit {
++ (void)fetch:(FetchArrayBlock)fetch where:(NSPredicate *)clause limit:(NSUInteger)limit {
     [self fetch:fetch where:clause orderBy:nil limit:limit];
 }
-+ (void)fetch:(FetchArray)fetch where:(NSPredicate *)clause orderBy:(NSArray <NSSortDescriptor *> *)sortDescriptors {
++ (void)fetch:(FetchArrayBlock)fetch where:(NSPredicate *)clause orderBy:(NSArray<NSSortDescriptor *> *)sortDescriptors {
     [self fetch:fetch where:clause orderBy:sortDescriptors limit:0];
 }
-+ (void)fetch:(FetchArray)fetch where:(NSPredicate *)clause orderBy:(NSArray <NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit {
++ (void)fetch:(FetchArrayBlock)fetch where:(NSPredicate *)clause orderBy:(NSArray<NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit {
     AKManagedObjectContext *context = [AKManagedObjectContext defaultContext];
     [context performBlock:^{
         NSFetchRequest *request = [self fetchRequest];

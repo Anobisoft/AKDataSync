@@ -44,7 +44,7 @@
 
 
 typedef void (^FetchRecord)(__kindof CKRecord *record);
-typedef void (^FetchRecordsArray)(NSArray <__kindof CKRecord *> *records);
+typedef void (^FetchRecordsArray)(NSArray<__kindof CKRecord *> *records);
 
 #pragma mark -
 
@@ -59,7 +59,7 @@ typedef void (^FetchRecordsArray)(NSArray <__kindof CKRecord *> *records);
 #pragma mark -
 
 @implementation AKCloudManager {
-    id <AKDataSyncContextPrivate, AKCloudManagerOwner> syncContext;
+    id<AKDataSyncContextPrivate, AKCloudManagerOwner> syncContext;
     AKCloudConfig *config;
 
     CKContainer *container;
@@ -576,14 +576,14 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
     if (self.enabled) [self replicationTotal:false completion:nil];
 }
 
-- (void)totalReplication:(AKBlock)completion {
+- (void)totalReplication:(void (^)(void))completion {
 #ifdef DEBUG
     NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
     if (self.enabled) [self replicationTotal:true completion:completion];
 }
 
-- (void)replicationTotal:(BOOL)total completion:(AKBlock)completion {
+- (void)replicationTotal:(BOOL)total completion:(void (^)(void))completion {
     if (total) {
         if (totalReplicationInprogress) return ;
         else totalReplicationInprogress = smartReplicationInprogress = true;
@@ -847,7 +847,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
     }];
 }
 
-- (void)enqueueDeletionWithDescription:(id <AKDescription>)description {
+- (void)enqueueDeletionWithDescription:(id<AKDescription>)description {
     if (!description.uniqueData) {
         NSLog(@"[ERROR] %s description.uniqueData == nil. description %@", __PRETTY_FUNCTION__, description);
         return;

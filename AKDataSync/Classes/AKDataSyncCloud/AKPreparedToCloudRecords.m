@@ -86,7 +86,7 @@
 
 
 @synthesize recordsToSave = _recordsToSave;
-- (NSArray <CKRecord *> *)recordsToSave {
+- (NSArray<CKRecord *> *)recordsToSave {
     if (!_recordsToSave) _recordsToSave = mutableRecordsToSave.copy;
     return _recordsToSave;
 }
@@ -103,7 +103,7 @@
 
 
 @synthesize recordIDsToDelete = _recordIDsToDelete;
-- (NSArray <CKRecordID *> *)recordIDsToDelete {
+- (NSArray<CKRecordID *> *)recordIDsToDelete {
     if (!_recordIDsToDelete) _recordIDsToDelete = mutableRecordIDsToDelete.copy;
     return _recordIDsToDelete;
 }

@@ -13,7 +13,7 @@
 
 @interface AKDevice : AKObjectRepresentation <AKMutableMappedObject, AKMutableReference>
 
-+ (instancetype)deviceWithMappedObject:(id <AKMappedObject>)mappedObject config:(AKCloudConfig *)config;
++ (instancetype)deviceWithMappedObject:(id<AKMappedObject>)mappedObject config:(AKCloudConfig *)config;
 
 - (void)setUUID:(AKUUID *)UUID;
 - (void)setUUIDString:(NSString *)UUIDString;

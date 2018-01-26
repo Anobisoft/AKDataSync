@@ -18,7 +18,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef void (^FetchObject)(__kindof NSManagedObject *object);
+typedef void (^FetchObjectBlock)(__kindof NSManagedObject *object);
 
 @interface AKManagedObjectContext : NSManagedObjectContext <AKDataSyncContext>
 
@@ -27,7 +27,7 @@ typedef void (^FetchObject)(__kindof NSManagedObject *object);
 - (instancetype)initWithStoreURL:(NSURL *)storeURL;
 
 + (instancetype)defaultContext;
-@property (nonatomic, weak) id <AKDataSyncContextDelegate> delegate;
+@property (nonatomic, weak) id<AKDataSyncContextDelegate> delegate;
 
 - (void)enableCloudSyncWithContainerIdentifier:(NSString *)containerIdentifier databaseScope:(AKDatabaseScope)databaseScope __WATCHOS_UNAVAILABLE;
 - (void)enableCloudSyncWithConfig:(nonnull NSString *)configName __WATCHOS_UNAVAILABLE;
@@ -44,20 +44,20 @@ typedef void (^FetchObject)(__kindof NSManagedObject *object);
 
 //Thread safe requests
 
-- (void)objectByUniqueData:(NSData *)uniqueData entityName:(NSString *)entityName fetch:(FetchObject)fetch;
+- (void)objectByUniqueData:(NSData *)uniqueData entityName:(NSString *)entityName fetch:(FetchObjectBlock)fetch;
 
-- (void)insertTo:(NSString *)entityName fetch:(FetchObject)fetch;
-- (void)deleteObject:(NSManagedObject *)object completion:(AKBlock)completion;
+- (void)insertTo:(NSString *)entityName fetch:(FetchObjectBlock)fetch;
+- (void)deleteObject:(NSManagedObject *)object completion:(void (^)(void))completion;
 
-- (void)selectFrom:(NSString *)entity fetch:(FetchArray)fetch;
-- (void)selectFrom:(NSString *)entity limit:(NSUInteger)limit fetch:(FetchArray)fetch;
-- (void)selectFrom:(NSString *)entity orderBy:(nullable NSArray <NSSortDescriptor *> *)sortDescriptors fetch:(FetchArray)fetch;
-- (void)selectFrom:(NSString *)entity orderBy:(nullable NSArray <NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit fetch:(FetchArray)fetch;
+- (void)selectFrom:(NSString *)entity fetch:(FetchArrayBlock)fetch;
+- (void)selectFrom:(NSString *)entity limit:(NSUInteger)limit fetch:(FetchArrayBlock)fetch;
+- (void)selectFrom:(NSString *)entity orderBy:(nullable NSArray<NSSortDescriptor *> *)sortDescriptors fetch:(FetchArrayBlock)fetch;
+- (void)selectFrom:(NSString *)entity orderBy:(nullable NSArray<NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit fetch:(FetchArrayBlock)fetch;
 
-- (void)selectFrom:(NSString *)entity where:(nullable NSPredicate *)clause fetch:(FetchArray)fetch;
-- (void)selectFrom:(NSString *)entity where:(nullable NSPredicate *)clause limit:(NSUInteger)limit fetch:(FetchArray)fetch;
-- (void)selectFrom:(NSString *)entity where:(nullable NSPredicate *)clause orderBy:(nullable NSArray <NSSortDescriptor *> *)sortDescriptors fetch:(FetchArray)fetch;
-- (void)selectFrom:(NSString *)entity where:(nullable NSPredicate *)clause orderBy:(nullable NSArray <NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit fetch:(FetchArray)fetch;
+- (void)selectFrom:(NSString *)entity where:(nullable NSPredicate *)clause fetch:(FetchArrayBlock)fetch;
+- (void)selectFrom:(NSString *)entity where:(nullable NSPredicate *)clause limit:(NSUInteger)limit fetch:(FetchArrayBlock)fetch;
+- (void)selectFrom:(NSString *)entity where:(nullable NSPredicate *)clause orderBy:(nullable NSArray<NSSortDescriptor *> *)sortDescriptors fetch:(FetchArrayBlock)fetch;
+- (void)selectFrom:(NSString *)entity where:(nullable NSPredicate *)clause orderBy:(nullable NSArray<NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit fetch:(FetchArrayBlock)fetch;
 
 NS_ASSUME_NONNULL_END
 

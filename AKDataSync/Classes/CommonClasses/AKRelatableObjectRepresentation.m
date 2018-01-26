@@ -13,7 +13,7 @@
 
 @interface AKObjectRepresentation(protected)
 
-- (instancetype)initWithMappedObject:(id <AKMappedObject>)object;
+- (instancetype)initWithMappedObject:(id<AKMappedObject>)object;
 
 @end
 
@@ -49,12 +49,12 @@
             _keyedReferences = tmpDict.copy;
         }
         if ([object conformsToProtocol:@protocol(AKRelatableToMany)]) {
-            id <AKRelatableToMany> relatableToManyObject = (NSObject<AKRelatableToMany> *)object;
+            id<AKRelatableToMany> relatableToManyObject = (NSObject<AKRelatableToMany> *)object;
             NSMutableDictionary <NSString *, NSSet <AKReference *> *> *tmpDict = [NSMutableDictionary new];
             NSDictionary <NSString *, NSSet <NSObject<AKReference> *> *> *keyedSetsOfReferences = relatableToManyObject.keyedSetsOfReferences;
             for (NSString *relationKey in keyedSetsOfReferences.allKeys) {
                 NSMutableSet <AKReference *> *innerSet = [NSMutableSet new];
-                for (id <AKReference> reference in keyedSetsOfReferences[relationKey]) {
+                for (id<AKReference> reference in keyedSetsOfReferences[relationKey]) {
                     [innerSet addObject:[AKReference instantiateWithReference:reference]];
                 }
                 [tmpDict setObject:innerSet.copy forKey:relationKey];

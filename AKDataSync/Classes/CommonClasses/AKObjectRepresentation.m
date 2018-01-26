@@ -13,7 +13,7 @@
 
 @interface AKDescriptionRepresentation(protected)
 
-- (instancetype)initWithDescription:(id <AKDescription>)description;
+- (instancetype)initWithDescription:(id<AKDescription>)description;
 
 @end
 

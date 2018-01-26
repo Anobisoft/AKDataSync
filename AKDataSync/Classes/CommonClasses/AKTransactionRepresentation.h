@@ -14,8 +14,8 @@
 
 @interface AKTransactionRepresentation : NSObject <AKRepresentableTransaction, NSCoding>
 
-+ (instancetype)instantiateWithRepresentableTransaction:(id <AKRepresentableTransaction>)transaction;
-- (void)mergeWithRepresentableTransaction:(id <AKRepresentableTransaction>)transaction;
++ (instancetype)instantiateWithRepresentableTransaction:(id<AKRepresentableTransaction>)transaction;
+- (void)mergeWithRepresentableTransaction:(id<AKRepresentableTransaction>)transaction;
 
 @end
 

@@ -10,7 +10,7 @@
 
 @interface AKObjectRepresentation(protected)
 
-- (instancetype)initWithMappedObject:(id <AKMappedObject>)object;
+- (instancetype)initWithMappedObject:(id<AKMappedObject>)object;
 
 @end
 
@@ -18,11 +18,11 @@
     __weak AKCloudConfig *_config;
 }
 
-+ (instancetype)deviceWithMappedObject:(id <AKMappedObject>)mappedObject config:(AKCloudConfig *)config {
++ (instancetype)deviceWithMappedObject:(id<AKMappedObject>)mappedObject config:(AKCloudConfig *)config {
     return [[self alloc] initWithMappedObject:mappedObject config:config];
 }
 
-- (instancetype)initWithMappedObject:(id <AKMappedObject>)mappedObject config:(AKCloudConfig *)config {
+- (instancetype)initWithMappedObject:(id<AKMappedObject>)mappedObject config:(AKCloudConfig *)config {
     if (self = [super initWithMappedObject:mappedObject]) {
         _config = config;
     }

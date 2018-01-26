@@ -40,7 +40,7 @@
 
 @protocol AKDataSyncContextPrivate <AKRepresentableTransaction>
 @required
-- (void)performMergeWithTransaction:(id <AKRepresentableTransaction>)transaction;
+- (void)performMergeWithTransaction:(id<AKRepresentableTransaction>)transaction;
 - (void)setAgregator:(id<AKTransactionsAgregator>)agregator;
 @end
 
@@ -48,12 +48,12 @@
 #if TARGET_OS_IOS
 @protocol AKCloudManager <AKTransactionsAgregator>
 @required
-- (void)setDataSyncContext:(id <AKDataSyncContextPrivate, AKCloudManagerOwner>)context;
+- (void)setDataSyncContext:(id<AKDataSyncContextPrivate, AKCloudManagerOwner>)context;
 
 @property (nonatomic, assign) BOOL enabled;
 - (void)acceptPushNotificationUserInfo:(NSDictionary *)userInfo;
 - (void)smartReplication;
-- (void)totalReplication:(AKBlock)completion;
+- (void)totalReplication:(void (^)(void))completion;
 - (BOOL)ready;
 @end
 
@@ -69,7 +69,7 @@
 @protocol AKWatchConnector <NSObject>
 - (void)setAgregator:(id<AKWatchTransactionsAgregator>)agregator;
 - (BOOL)ready;
-- (void)sendTransaction:(id <AKRepresentableTransaction, NSCoding>)transaction;
+- (void)sendTransaction:(id<AKRepresentableTransaction, NSCoding>)transaction;
 @end
 
 
@@ -77,13 +77,13 @@
 
 @protocol AKTransactionsAgregator <NSObject>
 @required
-- (void)context:(id<AKCloudManagerOwner>)context willCommitTransaction:(id <AKRepresentableTransaction>)transaction;
+- (void)context:(id<AKCloudManagerOwner>)context willCommitTransaction:(id<AKRepresentableTransaction>)transaction;
 @end
 
 @protocol AKWatchTransactionsAgregator <NSObject>
 @required
-- (void)watchConnector:(id <AKWatchConnector>)connector didRecieveTransaction:(id <AKRepresentableTransaction>)transaction;
-- (void)watchConnectorGetReady:(id <AKWatchConnector>)connector;
+- (void)watchConnector:(id<AKWatchConnector>)connector didRecieveTransaction:(id<AKRepresentableTransaction>)transaction;
+- (void)watchConnectorGetReady:(id<AKWatchConnector>)connector;
 @end
 
 #endif /* AKPrivateProtocol_h */

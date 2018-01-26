@@ -48,11 +48,11 @@
     return self;
 }
 
-- (NSSet <id <AKMappedObject>> *)updatedObjects {
+- (NSSet <id<AKMappedObject>> *)updatedObjects {
     return _updatedObjects;
 }
 
-- (NSSet <id <AKDescription>> *)deletedObjects {
+- (NSSet <id<AKDescription>> *)deletedObjects {
     return _deletedDescriptions;
 }
 

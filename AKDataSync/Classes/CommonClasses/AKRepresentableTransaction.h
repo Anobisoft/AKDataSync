@@ -12,7 +12,7 @@
 
 @interface AKRepresentableTransaction : NSObject <AKRepresentableTransaction, DisableNSInit>
 
-+ (instancetype)instantiateWithContext:(id <AKRepresentableTransaction>)context;
++ (instancetype)instantiateWithContext:(id<AKRepresentableTransaction>)context;
 - (void)addObjects:(NSSet<NSObject<AKMappedObject> *> *)objects;
 
 @end

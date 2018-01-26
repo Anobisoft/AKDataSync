@@ -9,21 +9,21 @@
 #import <CoreData/CoreData.h>
 #import "AKPublicProtocol.h"
 
-typedef void (^FetchArray)(NSArray <__kindof NSManagedObject *> *objects);
+typedef void (^FetchArrayBlock)(NSArray<__kindof NSManagedObject *> *objects);
 
 @interface NSManagedObject (AKDataSync)
 
 - (NSString *)entityName;
 + (NSString *)entityName;
 
-+ (void)fetch:(FetchArray)fetch;
-+ (void)fetch:(FetchArray)fetch limit:(NSUInteger)limit;
-+ (void)fetch:(FetchArray)fetch orderBy:(NSArray <NSSortDescriptor *> *)sortDescriptors ;
-+ (void)fetch:(FetchArray)fetch orderBy:(NSArray <NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit;
++ (void)fetch:(FetchArrayBlock)fetch;
++ (void)fetch:(FetchArrayBlock)fetch limit:(NSUInteger)limit;
++ (void)fetch:(FetchArrayBlock)fetch orderBy:(NSArray<NSSortDescriptor *> *)sortDescriptors ;
++ (void)fetch:(FetchArrayBlock)fetch orderBy:(NSArray<NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit;
 
-+ (void)fetch:(FetchArray)fetch where:(NSPredicate *)clause;
-+ (void)fetch:(FetchArray)fetch where:(NSPredicate *)clause limit:(NSUInteger)limit;
-+ (void)fetch:(FetchArray)fetch where:(NSPredicate *)clause orderBy:(NSArray <NSSortDescriptor *> *)sortDescriptors;
-+ (void)fetch:(FetchArray)fetch where:(NSPredicate *)clause orderBy:(NSArray <NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit;
++ (void)fetch:(FetchArrayBlock)fetch where:(NSPredicate *)clause;
++ (void)fetch:(FetchArrayBlock)fetch where:(NSPredicate *)clause limit:(NSUInteger)limit;
++ (void)fetch:(FetchArrayBlock)fetch where:(NSPredicate *)clause orderBy:(NSArray<NSSortDescriptor *> *)sortDescriptors;
++ (void)fetch:(FetchArrayBlock)fetch where:(NSPredicate *)clause orderBy:(NSArray<NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit;
 
 @end

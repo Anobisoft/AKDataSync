@@ -64,12 +64,12 @@
     _reverseMap = [AKMap new];
 }
 
-+ (instancetype)mappingWithSynchronizableEntities:(NSArray <NSString *> *)entities {
++ (instancetype)mappingWithSynchronizableEntities:(NSArray<NSString *> *)entities {
     return [[self alloc] initWithArray:entities];
 }
 
 
-- (instancetype)initWithArray:(NSArray <NSString *> *)array {
+- (instancetype)initWithArray:(NSArray<NSString *> *)array {
     if (self = [super init]) {
         _entities = [NSMutableSet setWithArray:array];
         _recordTypes = _entities.mutableCopy;

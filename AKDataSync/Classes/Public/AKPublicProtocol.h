@@ -102,7 +102,7 @@ NS_ASSUME_NONNULL_BEGIN
 #if TARGET_OS_IOS
 - (void)acceptPushNotificationUserInfo:(NSDictionary *)userInfo;
 #endif
-@property (nonatomic, weak) id <AKDataSyncContextDelegate> delegate;
+@property (nonatomic, weak) id<AKDataSyncContextDelegate> delegate;
 @end
 
 @protocol AKDataSyncContextDelegate <NSObject>
@@ -112,7 +112,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @protocol AKDataSyncSearchableContext <NSObject>
-- (id <AKFindableReference>)objectByUniqueData:(NSData *)uniqueData entityName:(NSString *)entityName;
+- (id<AKFindableReference>)objectByUniqueData:(NSData *)uniqueData entityName:(NSString *)entityName;
 @end
 
 

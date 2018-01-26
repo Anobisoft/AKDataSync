@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
     @protected BOOL sessionActivated;
 }
 
-@property (nonatomic, weak, nullable) id <AKWatchConnectorDelegate> delegate;
+@property (nonatomic, weak, nullable) id<AKWatchConnectorDelegate> delegate;
 @property (nonatomic, assign, readonly) BOOL ready;
 
 @end

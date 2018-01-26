@@ -19,7 +19,7 @@
 
 @property (nonatomic, strong) NSObject <AKRelatableToOne> *recievedRelationsToOne;
 @property (nonatomic, strong) NSObject <AKRelatableToMany> *recievedRelationsToMany;
-@property (nonatomic, strong) NSManagedObject <AKManagedObject> *managedObject;
+@property (nonatomic, strong) NSManagedObject<AKManagedObject> *managedObject;
 
 @end
 
@@ -42,7 +42,7 @@
     NSManagedObjectContext *mainContext;
     NSManagedObjectModel *managedObjectModel;
     NSPersistentStoreCoordinator *persistentStoreCoordinator;
-    NSMutableArray <id <AKRepresentableTransaction>> *recievedTransactionsQueue;
+    NSMutableArray <id<AKRepresentableTransaction>> *recievedTransactionsQueue;
     NSString *name;
     id<AKTransactionsAgregator> transactionsAgregator;
 #if TARGET_OS_IOS
@@ -86,7 +86,7 @@
     [self performBlockAndWait:^{
         for (NSManagedObject *obj in super.deletedObjects) {
             if ([obj conformsToProtocol:@protocol(AKDescription)]) {
-                [result addObject:[AKDescriptionRepresentation instantiateWithDescription:(NSManagedObject <AKDescription> *)obj]];
+                [result addObject:[AKDescriptionRepresentation instantiateWithDescription:(NSManagedObject<AKDescription> *)obj]];
             }
         }
     }];
@@ -119,7 +119,7 @@
     else NSLog(@"[ERROR] owned cloud manager unordered");
 }
 
-- (void)cloudTotalReplication:(AKBlock)completion {
+- (void)cloudTotalReplication:(void (^)(void))completion {
     if (ownedCloudManager) [ownedCloudManager totalReplication:completion];
     else NSLog(@"[ERROR] owned cloud manager unordered");
 }
@@ -244,11 +244,11 @@ BOOL totalReplicationInProgress;
                                  userInfo:nil];
 }
 
-- (NSManagedObject *)insertMappedObject:(id <AKMappedObject>)recievedObject {
+- (NSManagedObject *)insertMappedObject:(id<AKMappedObject>)recievedObject {
     NSManagedObject *object = [self insertTo:recievedObject.entityName];
     NSString *entityClassName = [[NSEntityDescription entityForName:recievedObject.entityName inManagedObjectContext:self] managedObjectClassName];
     if ([NSClassFromString(entityClassName) conformsToProtocol:@protocol(AKManagedObject)]) {
-        NSManagedObject <AKManagedObject> *synchronizableObject = (NSManagedObject <AKManagedObject> *)object;
+        NSManagedObject<AKManagedObject> *synchronizableObject = (NSManagedObject<AKManagedObject> *)object;
         synchronizableObject.uniqueData = recievedObject.uniqueData;
         synchronizableObject.modificationDate = recievedObject.modificationDate;
         synchronizableObject.keyedDataProperties = recievedObject.keyedDataProperties;
@@ -258,17 +258,17 @@ BOOL totalReplicationInProgress;
     return object;
 }
 
-- (NSManagedObject <AKFindableReference> *)objectByUniqueData:(NSData *)uniqueData entityName:(NSString *)entityName {
-    NSManagedObject <AKFindableReference> *resultObject = nil;
+- (NSManagedObject<AKFindableReference> *)objectByUniqueData:(NSData *)uniqueData entityName:(NSString *)entityName {
+    NSManagedObject<AKFindableReference> *resultObject = nil;
     NSString *entityClassName = [[NSEntityDescription entityForName:entityName inManagedObjectContext:self] managedObjectClassName];
     if ([NSClassFromString(entityClassName) conformsToProtocol:@protocol(AKFindableReference)]) {
-        Class <AKFindableReference> entityClass = NSClassFromString(entityClassName);
-        NSArray <NSManagedObject <AKFindableReference> *> *objects = [self selectFrom:entityName
+        Class<AKFindableReference> entityClass = NSClassFromString(entityClassName);
+        NSArray<NSManagedObject<AKFindableReference> *> *objects = [self selectFrom:entityName
                                                                                 where:[entityClass predicateWithUniqueData:uniqueData]];
         if (objects.count == 1) {
-            resultObject = (NSManagedObject <AKFindableReference> *)objects.firstObject;
+            resultObject = (NSManagedObject<AKFindableReference> *)objects.firstObject;
         } else if (objects.count) {
-            resultObject = (NSManagedObject <AKFindableReference> *)objects.firstObject;
+            resultObject = (NSManagedObject<AKFindableReference> *)objects.firstObject;
             @throw [NSException exceptionWithName:@"DataBase UNIQUE constraint violated"
                                            reason:[NSString stringWithFormat:@"Object count with UUID <%@>: %ld\n"
                                                    "Check your AKFindableReference protocol implementation for Entity <%@>",
@@ -282,9 +282,9 @@ BOOL totalReplicationInProgress;
     return resultObject;
 }
 
-- (void)objectByUniqueData:(NSData *)uniqueData entityName:(NSString *)entityName fetch:(void (^)(__kindof NSManagedObject *object))fetch {
+- (void)objectByUniqueData:(NSData *)uniqueData entityName:(NSString *)entityName fetch:(FetchObjectBlock)fetch {
     [self performBlock:^{
-        NSManagedObject <AKFindableReference> *object;
+        NSManagedObject<AKFindableReference> *object;
         @try {
             object = [self objectByUniqueData:uniqueData entityName:entityName];
         } @catch (NSException *exception) {
@@ -295,7 +295,7 @@ BOOL totalReplicationInProgress;
     }];
 }
 
-- (NSManagedObject <AKFindableReference> *)objectByDescription:(id <AKDescription>)description {
+- (NSManagedObject<AKFindableReference> *)objectByDescription:(id<AKDescription>)description {
     return [self objectByUniqueData:description.uniqueData entityName:description.entityName];
 }
 
@@ -313,11 +313,11 @@ BOOL totalReplicationInProgress;
         NSMutableArray <FoundObjectWithRelationRepresentation *> *foundObjectsWithRelationRepresentations = [NSMutableArray new];
         for (NSObject <AKMappedObject> *recievedMappedObject in transaction.updatedObjects) {
             @try {
-                NSManagedObject <AKFindableReference> *foundObject = [self objectByDescription:recievedMappedObject];
-                NSManagedObject <AKManagedObject> *managedObject;
+                NSManagedObject<AKFindableReference> *foundObject = [self objectByDescription:recievedMappedObject];
+                NSManagedObject<AKManagedObject> *managedObject;
                 if (foundObject) {
                     if ([foundObject.class conformsToProtocol:@protocol(AKManagedObject)]) {
-                        managedObject = (NSManagedObject <AKManagedObject> *)foundObject;
+                        managedObject = (NSManagedObject<AKManagedObject> *)foundObject;
                         if ([managedObject.modificationDate compare:recievedMappedObject.modificationDate] == NSOrderedAscending) {
                             managedObject.modificationDate = recievedMappedObject.modificationDate;
                             managedObject.keyedDataProperties = recievedMappedObject.keyedDataProperties;
@@ -327,7 +327,7 @@ BOOL totalReplicationInProgress;
                         }
                     }
                 } else {
-                    managedObject = (NSManagedObject <AKManagedObject> *)[self insertMappedObject:recievedMappedObject];
+                    managedObject = (NSManagedObject<AKManagedObject> *)[self insertMappedObject:recievedMappedObject];
                 }
                 
                 BOOL relatableToOne = [recievedMappedObject conformsToProtocol:@protocol(AKRelatableToOne)];
@@ -353,11 +353,11 @@ BOOL totalReplicationInProgress;
         
         for (FoundObjectWithRelationRepresentation *theFoundObjectWithRelationRepresentation in foundObjectsWithRelationRepresentations) {
             if (theFoundObjectWithRelationRepresentation.recievedRelationsToOne && [theFoundObjectWithRelationRepresentation.managedObject conformsToProtocol:@protocol(AKMutableRelatableToOne)]) {
-                NSManagedObject <AKManagedObject, AKMutableRelatableToOne> *managedObjectRelatableToOne = (NSManagedObject <AKManagedObject, AKMutableRelatableToOne> *)theFoundObjectWithRelationRepresentation.managedObject;
+                NSManagedObject<AKManagedObject, AKMutableRelatableToOne> *managedObjectRelatableToOne = (NSManagedObject<AKManagedObject, AKMutableRelatableToOne> *)theFoundObjectWithRelationRepresentation.managedObject;
                 for (NSString *relationKey in theFoundObjectWithRelationRepresentation.recievedRelationsToOne.keyedReferences.allKeys) {
                     NSObject <AKReference> *reference = theFoundObjectWithRelationRepresentation.recievedRelationsToOne.keyedReferences[relationKey];
                     NSString *relatedEntityName = [managedObjectRelatableToOne.class entityNameByRelationKey][relationKey];
-                    NSManagedObject <AKFindableReference> *relatedObject;
+                    NSManagedObject<AKFindableReference> *relatedObject;
                     @try {
                         relatedObject = [self objectByUniqueData:reference.uniqueData entityName:relatedEntityName];
                     } @catch (NSException *exception) {
@@ -368,13 +368,13 @@ BOOL totalReplicationInProgress;
                 }
             }
             if (theFoundObjectWithRelationRepresentation.recievedRelationsToMany && [theFoundObjectWithRelationRepresentation.managedObject conformsToProtocol:@protocol(AKMutableRelatableToMany)]) {
-                NSManagedObject <AKManagedObject, AKMutableRelatableToMany> *managedObjectRelatableToMany = (NSManagedObject <AKManagedObject, AKMutableRelatableToMany> *)theFoundObjectWithRelationRepresentation.managedObject;
+                NSManagedObject<AKManagedObject, AKMutableRelatableToMany> *managedObjectRelatableToMany = (NSManagedObject<AKManagedObject, AKMutableRelatableToMany> *)theFoundObjectWithRelationRepresentation.managedObject;
                 for (NSString *relationKey in theFoundObjectWithRelationRepresentation.recievedRelationsToMany.keyedSetsOfReferences.allKeys) {
                     NSSet <NSObject <AKReference> *> *setOfReferences = theFoundObjectWithRelationRepresentation.recievedRelationsToMany.keyedSetsOfReferences[relationKey];
                     NSString *relatedEntityName = [managedObjectRelatableToMany.class entityNameByRelationKey][relationKey];
                     NSMutableSet *newSet = [NSMutableSet new];
                     for (NSObject <AKReference> *reference in setOfReferences) {
-                        NSManagedObject <AKFindableReference> *relatedObject;
+                        NSManagedObject<AKFindableReference> *relatedObject;
                         @try {
                             relatedObject = [self objectByUniqueData:reference.uniqueData entityName:relatedEntityName];
                         } @catch (NSException *exception) {
@@ -389,7 +389,7 @@ BOOL totalReplicationInProgress;
         
         for (NSObject <AKDescription> *recievedDescription in transaction.deletedObjects) {
             @try {
-                NSManagedObject <AKFindableReference> *foundObject = [self objectByDescription:recievedDescription];
+                NSManagedObject<AKFindableReference> *foundObject = [self objectByDescription:recievedDescription];
                 if (foundObject) {
                     [self deleteObject:foundObject];
                 } else {
@@ -565,40 +565,40 @@ BOOL totalReplicationInProgress;
     }];
 }
 
-- (void)insertTo:(NSString *)entityName fetch:(FetchObject)fetch {
+- (void)insertTo:(NSString *)entityName fetch:(FetchObjectBlock)fetch {
     [self performBlock:^{
         NSManagedObject *object = [NSEntityDescription insertNewObjectForEntityForName:entityName inManagedObjectContext:self];
         NSString *entityClassName = [[NSEntityDescription entityForName:entityName inManagedObjectContext:self] managedObjectClassName];
         if ([NSClassFromString(entityClassName) conformsToProtocol:@protocol(AKMutableReference)]) {
-            NSManagedObject <AKMutableReference> *mutableReference = (NSManagedObject <AKMutableReference> *)object;
+            NSManagedObject<AKMutableReference> *mutableReference = (NSManagedObject<AKMutableReference> *)object;
             mutableReference.uniqueData = [AKUUID UUID].data;
         }
         fetch(object);
     }];
 }
 
-- (void)selectFrom:(NSString *)entity fetch:(FetchArray)fetch {
+- (void)selectFrom:(NSString *)entity fetch:(FetchArrayBlock)fetch {
     [self selectFrom:entity limit:0 fetch:fetch];
 }
-- (void)selectFrom:(NSString *)entity limit:(NSUInteger)limit fetch:(FetchArray)fetch {
+- (void)selectFrom:(NSString *)entity limit:(NSUInteger)limit fetch:(FetchArrayBlock)fetch {
     [self selectFrom:entity orderBy:nil limit:limit fetch:fetch];
 }
-- (void)selectFrom:(NSString *)entity orderBy:(nullable NSArray <NSSortDescriptor *> *)sortDescriptors fetch:(FetchArray)fetch {
+- (void)selectFrom:(NSString *)entity orderBy:(nullable NSArray<NSSortDescriptor *> *)sortDescriptors fetch:(FetchArrayBlock)fetch {
     [self selectFrom:entity orderBy:sortDescriptors limit:0 fetch:fetch];
 }
-- (void)selectFrom:(NSString *)entity orderBy:(nullable NSArray <NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit fetch:(FetchArray)fetch {
+- (void)selectFrom:(NSString *)entity orderBy:(nullable NSArray<NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit fetch:(FetchArrayBlock)fetch {
     [self selectFrom:entity where:nil orderBy:sortDescriptors limit:limit fetch:fetch];
 }
-- (void)selectFrom:(NSString *)entity where:(NSPredicate *)clause fetch:(FetchArray)fetch {
+- (void)selectFrom:(NSString *)entity where:(NSPredicate *)clause fetch:(FetchArrayBlock)fetch {
     [self selectFrom:entity where:clause limit:0 fetch:fetch];
 }
-- (void)selectFrom:(NSString *)entity where:(NSPredicate *)clause limit:(NSUInteger)limit fetch:(FetchArray)fetch {
+- (void)selectFrom:(NSString *)entity where:(NSPredicate *)clause limit:(NSUInteger)limit fetch:(FetchArrayBlock)fetch {
     [self selectFrom:entity where:clause orderBy:nil limit:limit fetch:fetch];
 }
-- (void)selectFrom:(NSString *)entity where:(NSPredicate *)clause orderBy:(nullable NSArray <NSSortDescriptor *> *)sortDescriptors fetch:(FetchArray)fetch {
+- (void)selectFrom:(NSString *)entity where:(NSPredicate *)clause orderBy:(nullable NSArray<NSSortDescriptor *> *)sortDescriptors fetch:(FetchArrayBlock)fetch {
     [self selectFrom:entity where:clause orderBy:sortDescriptors limit:0 fetch:fetch];
 }
-- (void)selectFrom:(NSString *)entity where:(NSPredicate *)clause orderBy:(nullable NSArray <NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit fetch:(FetchArray)fetch {
+- (void)selectFrom:(NSString *)entity where:(NSPredicate *)clause orderBy:(nullable NSArray<NSSortDescriptor *> *)sortDescriptors limit:(NSUInteger)limit fetch:(FetchArrayBlock)fetch {
     [self performBlock:^{
         fetch([self selectFrom:entity where:clause orderBy:sortDescriptors limit:limit]);
     }];

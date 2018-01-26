@@ -12,7 +12,7 @@
 
 @interface AKReference(protected)
 
-- (instancetype)initWithReference:(id <AKReference>)reference;
+- (instancetype)initWithReference:(id<AKReference>)reference;
 
 @end
 

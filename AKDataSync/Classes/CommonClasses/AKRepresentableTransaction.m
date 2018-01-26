@@ -26,11 +26,11 @@
     return _deletedObjects;
 }
 
-+ (instancetype)instantiateWithContext:(id <AKRepresentableTransaction>)context {
++ (instancetype)instantiateWithContext:(id<AKRepresentableTransaction>)context {
     return [[self alloc] initWithContext:context];
 }
 
-- (instancetype)initWithContext:(id <AKRepresentableTransaction>)context {
+- (instancetype)initWithContext:(id<AKRepresentableTransaction>)context {
     if (self = [super init]) {
         _contextIdentifier = context.contextIdentifier;
         _updatedObjects = context.updatedObjects.copy;

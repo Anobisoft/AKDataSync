@@ -14,7 +14,7 @@
 #define AKDataSync_WC_transactionDataKey @"AKDataSync_WC_transactionData"
 
 @interface AKWatchConnector() <AKWatchConnector>
-@property (nonatomic, weak) id <AKWatchTransactionsAgregator> agregator;
+@property (nonatomic, weak) id<AKWatchTransactionsAgregator> agregator;
 @end
 
 @implementation AKWatchConnector {
@@ -141,7 +141,7 @@
 
 #pragma mark data send and recieve
 
-- (void)sendTransaction:(id <AKRepresentableTransaction, NSCoding>)transaction; {
+- (void)sendTransaction:(id<AKRepresentableTransaction, NSCoding>)transaction; {
     if (transaction) {
         NSData *transactionData = [NSKeyedArchiver archivedDataWithRootObject:transaction];
         NSDictionary *userInfo = @{ AKDataSync_WC_targetKey : NSStringFromClass(self.class),

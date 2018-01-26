@@ -24,12 +24,12 @@
     return [[self alloc] initWithRecordType:recordType];
 }
 
-- (id <AKDescription>)descriptionOfDeletedObjectWithMapping:(AKCloudMapping *)mapping config:(AKCloudConfig *)config {
+- (id<AKDescription>)descriptionOfDeletedObjectWithMapping:(AKCloudMapping *)mapping config:(AKCloudConfig *)config {
     return [AKCloudDescriptionRepresentation instantiateWithRecordType:self[config.recordTypeFieldName]
                                                             uniqueData:[AKUUID UUIDWithUUIDString:self[config.recordIDFieldName]].data mapping:mapping];
 }
 
-- (id <AKMappedObject>)mappedObjectWithMapping:(AKCloudMapping *)mapping config:(AKCloudConfig *)config {
+- (id<AKMappedObject>)mappedObjectWithMapping:(AKCloudMapping *)mapping config:(AKCloudConfig *)config {
     return [AKCloudRecordRepresentation instantiateWithCloudRecord:(CKRecord<AKMappedObject> *)self mapping:mapping config:config];
 }
 
@@ -68,7 +68,7 @@
 
 - (void)setKeyedDataProperties:(NSDictionary <NSString *, NSObject <NSCoding> *> *)keyedDataProperties {
     for (NSString *key in keyedDataProperties.allKeys) {
-        self[key] = [keyedDataProperties[key] isKindOfClass:[NSNull class]] ? nil : (__kindof id <CKRecordValue>)keyedDataProperties[key];
+        self[key] = [keyedDataProperties[key] isKindOfClass:[NSNull class]] ? nil : (__kindof id<CKRecordValue>)keyedDataProperties[key];
     }
 }
 

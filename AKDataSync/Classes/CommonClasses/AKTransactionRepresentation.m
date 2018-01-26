@@ -45,11 +45,11 @@
     return self;
 }
 
-+ (instancetype)instantiateWithRepresentableTransaction:(id <AKRepresentableTransaction>)transaction {
++ (instancetype)instantiateWithRepresentableTransaction:(id<AKRepresentableTransaction>)transaction {
     return [[self alloc] initWithRepresentableTransaction:transaction];
 }
 
-- (instancetype)initWithRepresentableTransaction:(id <AKRepresentableTransaction>)transaction {
+- (instancetype)initWithRepresentableTransaction:(id<AKRepresentableTransaction>)transaction {
     if (self = [super init]) {
         _contextIdentifier = transaction.contextIdentifier;
         NSSet <NSObject<AKMappedObject> *> *updatedObjects = transaction.updatedObjects;
@@ -77,7 +77,7 @@
     return (_deletedObjects || _updatedObjects) ? self : nil;
 }
 
-- (void)mergeWithRepresentableTransaction:(id <AKRepresentableTransaction>)transaction {
+- (void)mergeWithRepresentableTransaction:(id<AKRepresentableTransaction>)transaction {
     if ([self.contextIdentifier isEqualToString:transaction.contextIdentifier]) {
         NSSet <NSObject<AKMappedObject> *> *updatedObjects = transaction.updatedObjects;
         if (updatedObjects.count) {

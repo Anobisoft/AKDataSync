@@ -36,7 +36,7 @@
 }
 
 - (void)context:(id<AKCloudManagerOwner>)context willCommitTransaction:(id<AKRepresentableTransaction>)transaction {
-    if ([watchContextSet containsObject:(id <AKDataSyncContextPrivate>)transaction]) {
+    if ([watchContextSet containsObject:(id<AKDataSyncContextPrivate>)transaction]) {
         AKTransactionRepresentation *transactionRepresentation = [AKTransactionRepresentation instantiateWithRepresentableTransaction:transaction];
         if (_watchConnector) {
             if (_watchConnector.ready) {
@@ -75,14 +75,14 @@
 }
 
 #if TARGET_OS_IOS
-- (void)setCloudContext:(id <AKDataSyncContextPrivate, AKCloudManagerOwner>)context containerIdentifier:(NSString *)containerIdentifier databaseScope:(AKDatabaseScope)databaseScope {
+- (void)setCloudContext:(id<AKDataSyncContextPrivate, AKCloudManagerOwner>)context containerIdentifier:(NSString *)containerIdentifier databaseScope:(AKDatabaseScope)databaseScope {
     id<AKCloudManager> cloudManager = (id<AKCloudManager>)[AKCloudManager instanceWithContainerIdentifier:containerIdentifier databaseScope:databaseScope];
     [context setAgregator:self];
     [context setCloudManager:cloudManager];
     [cloudManager setDataSyncContext:context];
 }
 
-- (void)setCloudContext:(id <AKDataSyncContextPrivate, AKCloudManagerOwner>)context config:(NSString *)configName {
+- (void)setCloudContext:(id<AKDataSyncContextPrivate, AKCloudManagerOwner>)context config:(NSString *)configName {
     id<AKCloudManager> cloudManager = (id<AKCloudManager>)[AKCloudManager instanceWithConfig:configName];
     [context setAgregator:self];
     [context setCloudManager:cloudManager];
