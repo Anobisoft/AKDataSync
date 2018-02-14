@@ -1,13 +1,13 @@
 //
 //  AKCloudConfig.m
-//  Pods
+//  AKDataSync
 //
 //  Created by Stanislav Pletnev on 28.08.17.
-//
+//  Copyright © 2017 Anobisoft. All rights reserved.
 //
 
 #import "AKCloudConfig.h"
-#import <AnobiKit/AKConfig.h>
+#import <AnobiKit/AKConfigManager.h>
 
 #pragma mark - DefaultConfigValues
 #define AKCloudRealModificationDateFieldNameDefaultValue @"AK_realModificationDate"
@@ -81,8 +81,10 @@ static NSDictionary<NSString *, NSNumber *> *keyedAKDatabaseScope;
     if (self = [super init]) {
         NSDictionary *configDictionary = nil;
         if (configName) {
-            AKConfig<NSDictionary *> *configs = [AKConfig<NSDictionary *> configs];
-            configDictionary = configs[configName] ?: configs[@"AKDataSync"];
+            configDictionary = [AKConfigManager manager][configName];
+        }
+        if (!configDictionary) {
+            configDictionary = [AKConfigManager manager][@"AKDataSync"];
         }
         
         _containerIdentifier = configDictionary[AKCloudContainerCFGKey] ?: [NSString stringWithFormat:@"iCloud.%@", [NSBundle mainBundle].bundleIdentifier];

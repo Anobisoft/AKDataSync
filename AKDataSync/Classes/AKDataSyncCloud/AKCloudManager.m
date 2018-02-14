@@ -54,39 +54,43 @@ typedef void (^FetchRecordsArray)(NSArray<__kindof CKRecord *> *records);
 @property (nonatomic) AKCloudState initState;
 - (void)setMaxCloudModificationDate:(NSDate *)date forEntity:(NSString *)entity;
 
+@property AKCloudConfig *config;
+@property (weak) id<AKDataSyncContextPrivate, AKCloudManagerOwner> syncContext;
+@property CKContainer *container;
+@property CKDatabase *db;
+@property AKDeviceList *deviceList;
+@property AKPreparedToCloudRecords *preparedToCloudRecords;
+@property BOOL smartReplicationInprogress;
+@property BOOL totalReplicationInprogress;
+@property NSTimer *retryToInitTimer;
+@property NSTimer *resmartTimer;
+@property dispatch_queue_t waitingQueue;
+
 @end
 
 #pragma mark -
 
 @implementation AKCloudManager {
-    id<AKDataSyncContextPrivate, AKCloudManagerOwner> syncContext;
-    AKCloudConfig *config;
-
-    CKContainer *container;
-    CKDatabase *db;
-    
-    AKDeviceList *deviceList;
     NSPredicate *thisDevicePredicate;
-    AKPreparedToCloudRecords *preparedToCloudRecords;
     NSMutableSet <CKRecord *> *_recievedUpdatedRecords, *_recievedDeletionInfoRecords;
     
     dispatch_group_t primaryInitializationGroup;
     dispatch_group_t lockCloudGroup;
-    dispatch_queue_t waitingQueue;
-    BOOL smartReplicationInprogress, totalReplicationInprogress;
+    
+    
     
     NSString *maxCloudModificationDateForEntityUDCompositeKey, *preparedToCloudRecordsUDCompositeKey;
     
-    NSTimer *retryToInitTimer;
-    NSTimer *resmartTimer;
+    
+    
     
 }
 
 @synthesize initState = _initState;
 - (void)setInitState:(AKCloudState)initState {
     _initState = initState;
-    if (syncContext) {
-        [syncContext cloudManager:self didChangeState:initState];
+    if (self.syncContext) {
+        [self.syncContext cloudManager:self didChangeState:initState];
     }
 }
 
@@ -152,7 +156,7 @@ static NSMapTable<NSString *, id> *instancesByConfig;
 
 - (instancetype)initWithContainerIdentifier:(NSString *)identifier databaseScope:(AKDatabaseScope)databaseScope {
     if (self = [super init]) {
-        config = [AKCloudConfig configWithContainerIdentifier:identifier databaseScope:databaseScope];
+        self.config = [AKCloudConfig configWithContainerIdentifier:identifier databaseScope:databaseScope];
         [self initConfiguredInstance];
     }
     return self;
@@ -169,7 +173,7 @@ static NSMapTable<NSString *, id> *instancesByConfig;
 
 - (instancetype)initWithConfig:(NSString *)configName {
     if (self = [super init]) {
-        config = [AKCloudConfig configWithName:configName];
+        self.config = [AKCloudConfig configWithName:configName];
         [self initConfiguredInstance];
     }
     return self;
@@ -178,41 +182,41 @@ static NSMapTable<NSString *, id> *instancesByConfig;
 - (void)initConfiguredInstance {
     primaryInitializationGroup = dispatch_group_create();
     lockCloudGroup = dispatch_group_create();
-    waitingQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    self.waitingQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     
     _recievedUpdatedRecords = [NSMutableSet new];
     _recievedDeletionInfoRecords = [NSMutableSet new];
-    deviceList = [AKDeviceList listWithConfig:config];
+    self.deviceList = [AKDeviceList listWithConfig:self.config];
     
-    NSString *predicateFormat = [NSString stringWithFormat:@"(%@ == %%@)", config.deviceIDFieldName];
-    thisDevicePredicate = [NSPredicate predicateWithFormat:predicateFormat, deviceList.thisDevice.UUIDString];
+    NSString *predicateFormat = [NSString stringWithFormat:@"(%@ == %%@)", self.config.deviceIDFieldName];
+    thisDevicePredicate = [NSPredicate predicateWithFormat:predicateFormat, self.deviceList.thisDevice.UUIDString];
     
-    container = [CKContainer containerWithIdentifier:config.containerIdentifier];
+    self.container = [CKContainer containerWithIdentifier:self.config.containerIdentifier];
     
     NSString *dbScopeString;
-    switch (config.databaseScope) {
+    switch (self.config.databaseScope) {
         case AKDatabaseScopePublic:
-            db = container.publicCloudDatabase;
+            self.db = self.container.publicCloudDatabase;
             dbScopeString = @"Public";
             break;
         case AKDatabaseScopeShared:
-            db = container.sharedCloudDatabase;
+            self.db = self.container.sharedCloudDatabase;
             dbScopeString = @"Shared";
             break;
         default:            
-            db = container.privateCloudDatabase;
+            self.db = self.container.privateCloudDatabase;
             dbScopeString = @"Private";
             break;
     }
-    _instanceIdentifier = [NSString stringWithFormat:@"%@%@-%@", NSStringFromClass(self.class), dbScopeString, container.containerIdentifier];
+    _instanceIdentifier = [NSString stringWithFormat:@"%@%@-%@", NSStringFromClass(self.class), dbScopeString, self.container.containerIdentifier];
     
     maxCloudModificationDateForEntityUDCompositeKey = [NSString stringWithFormat:@"%@-%@", _instanceIdentifier, AKCloudMaxModificationDateForEntityUDKey];
     maxCloudModificationDateForEntityMutable = self.maxCloudModificationDateForEntity.mutableCopy;
     
     preparedToCloudRecordsUDCompositeKey = [NSString stringWithFormat:@"%@-%@", _instanceIdentifier, AKCloudPreparedToCloudRecordsUDKey];
     NSData *preparedToCloudRecordsData = [[NSUserDefaults standardUserDefaults] objectForKey:preparedToCloudRecordsUDCompositeKey];
-    if (preparedToCloudRecordsData) preparedToCloudRecords = [NSKeyedUnarchiver unarchiveObjectWithData:preparedToCloudRecordsData];
-    else preparedToCloudRecords = [AKPreparedToCloudRecords new];
+    if (preparedToCloudRecordsData) self.preparedToCloudRecords = [NSKeyedUnarchiver unarchiveObjectWithData:preparedToCloudRecordsData];
+    else self.preparedToCloudRecords = [AKPreparedToCloudRecords new];
     
     [self tryPerformInit];
 }
@@ -233,23 +237,23 @@ static NSMapTable<NSString *, id> *instancesByConfig;
 #ifdef DEBUG
     NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
-    if (retryToInitTimer) {
-        [retryToInitTimer invalidate];
-        retryToInitTimer = nil;
+    if (self.retryToInitTimer) {
+        [self.retryToInitTimer invalidate];
+        self.retryToInitTimer = nil;
     }
     if (self.enabled) [self performPrimaryInitCompletion:^{
         if (self.ready) {
 #ifdef DEBUG
             NSLog(@"[DEBUG] %s READY!!!", __PRETTY_FUNCTION__);
 #endif
-            if (preparedToCloudRecords.accumulativeTransaction) [self performCloudUpdateWithLocalTransaction:preparedToCloudRecords.accumulativeTransaction];
+            if (self.preparedToCloudRecords.accumulativeTransaction) [self performCloudUpdateWithLocalTransaction:self.preparedToCloudRecords.accumulativeTransaction];
         } else {
-            if (retryToInitTimer) {
-                [retryToInitTimer invalidate];
-                retryToInitTimer = nil;
+            if (self.retryToInitTimer) {
+                [self.retryToInitTimer invalidate];
+                self.retryToInitTimer = nil;
             }
             dispatch_async(dispatch_get_main_queue(), ^{
-                retryToInitTimer = [NSTimer scheduledTimerWithTimeInterval:config.initTimeout repeats:false block:^(NSTimer * _Nonnull timer) {
+                self.retryToInitTimer = [NSTimer scheduledTimerWithTimeInterval:self.config.initTimeout repeats:false block:^(NSTimer * _Nonnull timer) {
                     [self tryPerformInit];
                 }];
             });
@@ -262,18 +266,18 @@ static NSMapTable<NSString *, id> *instancesByConfig;
     NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
     dispatch_group_enter(primaryInitializationGroup);
-    [container accountStatusWithCompletionHandler:^(CKAccountStatus accountStatus, NSError * _Nullable error) {
+    [self.container accountStatusWithCompletionHandler:^(CKAccountStatus accountStatus, NSError * _Nullable error) {
         if (error) {
             NSLog(@"[ERROR] %@", error.localizedDescription);
         }
         self.initState = (AKCloudState)accountStatus;
         if (accountStatus == CKAccountStatusAvailable) {
             [self updateDevicesCompletion:^{
-                dispatch_group_leave(primaryInitializationGroup);
+                dispatch_group_leave(self->primaryInitializationGroup);
                 if (completion) completion();
             }];
         } else {
-            dispatch_group_leave(primaryInitializationGroup);
+            dispatch_group_leave(self->primaryInitializationGroup);
             if (completion) completion();
         }
     }];
@@ -281,7 +285,7 @@ static NSMapTable<NSString *, id> *instancesByConfig;
 
 - (void)savePreparedToCloudRecords {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [[NSUserDefaults standardUserDefaults] setObject:[NSKeyedArchiver archivedDataWithRootObject:preparedToCloudRecords] forKey:preparedToCloudRecordsUDCompositeKey];
+        [[NSUserDefaults standardUserDefaults] setObject:[NSKeyedArchiver archivedDataWithRootObject:self.preparedToCloudRecords] forKey:self->preparedToCloudRecordsUDCompositeKey];
     });    
 }
 
@@ -293,7 +297,7 @@ static NSMapTable<NSString *, id> *instancesByConfig;
 #ifdef DEBUG
     NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
-    [self enqueueUpdateWithMappedObject:deviceList.thisDevice successBlock:^(BOOL success) {
+    [self enqueueUpdateWithMappedObject:self.deviceList.thisDevice successBlock:^(BOOL success) {
         if (success) {
 #ifdef DEBUG
             NSLog(@"[DEBUG] enqueueUpdateThisDevice success");
@@ -324,14 +328,14 @@ static NSMapTable<NSString *, id> *instancesByConfig;
 #ifdef DEBUG
     NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
-    [self getAllRecordsOfEntityName:config.deviceRecordType fetch:^(NSArray<__kindof CKRecord *> *records) {
+    [self getAllRecordsOfEntityName:self.config.deviceRecordType fetch:^(NSArray<__kindof CKRecord *> *records) {
         if (records) {
 #ifdef DEBUG
             NSLog(@"[DEBUG] %s count: %ld", __PRETTY_FUNCTION__, (long)records.count);
 #endif
             for (CKRecord<AKMappedObject> *record in records) {
-                AKDevice *device = [AKDevice deviceWithMappedObject:record config:config];
-                [deviceList addDevice:device];
+                AKDevice *device = [AKDevice deviceWithMappedObject:record config:self.config];
+                [self.deviceList addDevice:device];
             }
             self.initState = AKCloudStateDevicesReloaded;
         } else {
@@ -345,14 +349,14 @@ static NSMapTable<NSString *, id> *instancesByConfig;
 #ifdef DEBUG
     NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
-    [self getNewRecordsOfEntityName:config.deviceRecordType fetch:^(NSArray<__kindof CKRecord *> *records) {
+    [self getNewRecordsOfEntityName:self.config.deviceRecordType fetch:^(NSArray<__kindof CKRecord *> *records) {
         if (records) {
 #ifdef DEBUG
             NSLog(@"[DEBUG] %s count: %ld", __PRETTY_FUNCTION__, (long)records.count);
 #endif
             for (CKRecord<AKMappedObject> *record in records) {
-                AKDevice *device = [AKDevice deviceWithMappedObject:record config:config];
-                [deviceList addDevice:device];
+                AKDevice *device = [AKDevice deviceWithMappedObject:record config:self.config];
+                [self.deviceList addDevice:device];
             }
         }
         if (completion) completion();
@@ -371,13 +375,13 @@ static NSMapTable<NSString *, id> *instancesByConfig;
 #ifdef DEBUG
     NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
-    [db fetchAllSubscriptionsWithCompletionHandler:^(NSArray<CKSubscription *> * _Nullable subscriptions, NSError * _Nullable error) {
+    [self.db fetchAllSubscriptionsWithCompletionHandler:^(NSArray<CKSubscription *> * _Nullable subscriptions, NSError * _Nullable error) {
         dispatch_group_t removeSubscriptionsGroup = dispatch_group_create();
         
         if (error) NSLog(@"[ERROR] fetchAllSubscriptions error: %@", error.localizedDescription);
         for (CKQuerySubscription *subscription in subscriptions) {
             dispatch_group_enter(removeSubscriptionsGroup);
-            [db deleteSubscriptionWithID:subscription.subscriptionID completionHandler:^(NSString * _Nullable subscriptionID, NSError * _Nullable error) {
+            [self.db deleteSubscriptionWithID:subscription.subscriptionID completionHandler:^(NSString * _Nullable subscriptionID, NSError * _Nullable error) {
                 if (error) NSLog(@"[ERROR] deleteSubscription error: %@", error.localizedDescription);
                 dispatch_group_leave(removeSubscriptionsGroup);
             }];
@@ -411,17 +415,17 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
         //            subscription.notificationInfo.alertBody = @"";
         subscription.notificationInfo.shouldBadge = true;
         subscription.notificationInfo.category = @"CloudKit";
-        [db saveSubscription:subscription completionHandler:completionHandler];
+        [self.db saveSubscription:subscription completionHandler:completionHandler];
     }
-    CKQuerySubscription *subscription = [[CKQuerySubscription alloc] initWithRecordType:config.deletionInfoRecordType
+    CKQuerySubscription *subscription = [[CKQuerySubscription alloc] initWithRecordType:self.config.deletionInfoRecordType
                                                                               predicate:thisDevicePredicate
                                                                                 options:CKQuerySubscriptionOptionsFiresOnRecordCreation+CKQuerySubscriptionOptionsFiresOnRecordUpdate];
-    [db saveSubscription:subscription completionHandler:completionHandler];
+    [self.db saveSubscription:subscription completionHandler:completionHandler];
 }
 
 - (void)acceptPushNotificationUserInfo:(NSDictionary *)userInfo {
     CKQueryNotification *notification = [CKQueryNotification notificationFromRemoteNotificationDictionary:userInfo];
-    if (notification.notificationType == CKNotificationTypeQuery && notification.databaseScope == db.databaseScope && [notification.containerIdentifier isEqualToString:container.containerIdentifier]) {
+    if (notification.notificationType == CKNotificationTypeQuery && notification.databaseScope == self.db.databaseScope && [notification.containerIdentifier isEqualToString:self.container.containerIdentifier]) {
 #ifdef DEBUG
         NSLog(@"[DEBUG] %@ acceptPushNotification: %@", self.class, notification);
 #endif
@@ -436,11 +440,11 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
                     NSLog(@"[DEBUG] found record %@", record);
                     #endif
                     NSString *entityName = self.mapping.reverseMap[record.recordType];
-                    if ([record.recordType isEqualToString:config.deletionInfoRecordType]) {
-                        [_recievedDeletionInfoRecords addObject:record];
-                        [preparedToCloudRecords addRecordIDToDelete:record.recordID];
+                    if ([record.recordType isEqualToString:self.config.deletionInfoRecordType]) {
+                        [self->_recievedDeletionInfoRecords addObject:record];
+                        [self.preparedToCloudRecords addRecordIDToDelete:record.recordID];
                     } else if (entityName) {
-                        [_recievedUpdatedRecords addObject:record];
+                        [self->_recievedUpdatedRecords addObject:record];
                     }
                     [self performMergeAndCleanupIfNeeded];
                 } else {
@@ -467,7 +471,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
 }
 
 - (void)setDataSyncContext:(id<AKDataSyncContextPrivate, AKCloudManagerOwner>)context {
-    syncContext = context;
+    self.syncContext = context;
     [self startSmart];
 }
 
@@ -475,13 +479,13 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
 #ifdef DEBUG
     NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
-    if (self.enabled) dispatch_async(waitingQueue, ^{
-        dispatch_group_wait(primaryInitializationGroup, DISPATCH_TIME_FOREVER);
+    if (self.enabled) dispatch_async(self.waitingQueue, ^{
+        dispatch_group_wait(self->primaryInitializationGroup, DISPATCH_TIME_FOREVER);
         if (self.ready) {
             [self subscribeToRegisteredRecordTypes];
             [self smartReplication];
         } else {
-            if (self.enabled) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(config.smartReplicationTimeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            if (self.enabled) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.config.smartReplicationTimeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 if (self.enabled) [self startSmart];
             });
         }
@@ -489,11 +493,11 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
 }
 
 - (AKCloudMapping *)mapping {
-    return syncContext.cloudMapping;
+    return self.syncContext.cloudMapping;
 }
 
 - (id<AKDataSyncContextPrivate, AKCloudManagerOwner>)dataSyncContext {
-    return syncContext;
+    return self.syncContext;
 }
 
 - (void)context:(id<AKCloudManagerOwner>)context willCommitTransaction:(id<AKRepresentableTransaction>)transaction {
@@ -501,16 +505,16 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
     NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
     if (self.enabled) {
-        if (preparedToCloudRecords.accumulativeTransaction) {
-            [preparedToCloudRecords.accumulativeTransaction mergeWithRepresentableTransaction:transaction];
+        if (self.preparedToCloudRecords.accumulativeTransaction) {
+            [self.preparedToCloudRecords.accumulativeTransaction mergeWithRepresentableTransaction:transaction];
             [self savePreparedToCloudRecords];
-            [self performCloudUpdateWithLocalTransaction:preparedToCloudRecords.accumulativeTransaction];
+            [self performCloudUpdateWithLocalTransaction:self.preparedToCloudRecords.accumulativeTransaction];
         } else [self performCloudUpdateWithLocalTransaction:transaction];
     } else {
-        if (preparedToCloudRecords.accumulativeTransaction) {
-            [preparedToCloudRecords.accumulativeTransaction mergeWithRepresentableTransaction:transaction];
+        if (self.preparedToCloudRecords.accumulativeTransaction) {
+            [self.preparedToCloudRecords.accumulativeTransaction mergeWithRepresentableTransaction:transaction];
         } else {
-            preparedToCloudRecords.accumulativeTransaction = [AKTransactionRepresentation instantiateWithRepresentableTransaction:transaction];
+            self.preparedToCloudRecords.accumulativeTransaction = [AKTransactionRepresentation instantiateWithRepresentableTransaction:transaction];
         }
         [self savePreparedToCloudRecords];
     }
@@ -522,15 +526,15 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
 #ifdef DEBUG
     NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
-    dispatch_async(waitingQueue, ^{
-        dispatch_group_wait(primaryInitializationGroup, DISPATCH_TIME_FOREVER);
+    dispatch_async(self.waitingQueue, ^{
+        dispatch_group_wait(self->primaryInitializationGroup, DISPATCH_TIME_FOREVER);
         if (self.ready) {
-            dispatch_group_wait(lockCloudGroup, DISPATCH_TIME_FOREVER);
-            dispatch_group_enter(lockCloudGroup);
+            dispatch_group_wait(self->lockCloudGroup, DISPATCH_TIME_FOREVER);
+            dispatch_group_enter(self->lockCloudGroup);
             for (NSObject<AKMappedObject> *mappedObject in transaction.updatedObjects) {
                 [self enqueueUpdateWithMappedObject:mappedObject successBlock:^(BOOL success) {
                     if (!success) {
-                        [preparedToCloudRecords addFailedEnqueueUpdateObject:mappedObject];
+                        [self.preparedToCloudRecords addFailedEnqueueUpdateObject:mappedObject];
                         [self savePreparedToCloudRecords];
                         NSLog(@"[WARNING] enqueueUpdateWithMappedObject unsuccess");
                     } else {
@@ -546,19 +550,19 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
                     [self enqueueDeletionWithDescription:description];
                 }
                 [self pushQueueWithSuccessBlock:^(BOOL success) {
-                    if (preparedToCloudRecords.accumulativeTransaction) preparedToCloudRecords.accumulativeTransaction = nil;
+                    if (self.preparedToCloudRecords.accumulativeTransaction) self.preparedToCloudRecords.accumulativeTransaction = nil;
                     [self savePreparedToCloudRecords];
-                    dispatch_group_leave(lockCloudGroup);
+                    dispatch_group_leave(self->lockCloudGroup);
                 }];
             }];
         } else {
-            if (!preparedToCloudRecords.accumulativeTransaction) {
-                preparedToCloudRecords.accumulativeTransaction = [AKTransactionRepresentation instantiateWithRepresentableTransaction:transaction];
+            if (!self.preparedToCloudRecords.accumulativeTransaction) {
+                self.preparedToCloudRecords.accumulativeTransaction = [AKTransactionRepresentation instantiateWithRepresentableTransaction:transaction];
                 [self savePreparedToCloudRecords];
             }
-            if (self.enabled) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(config.initTimeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            if (self.enabled) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.config.initTimeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 if (self.enabled) [self performPrimaryInitCompletion:^{
-                    [self performCloudUpdateWithLocalTransaction:preparedToCloudRecords.accumulativeTransaction];
+                    [self performCloudUpdateWithLocalTransaction:self.preparedToCloudRecords.accumulativeTransaction];
                 }];
             });
         }
@@ -585,25 +589,25 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
 
 - (void)replicationTotal:(BOOL)total completion:(void (^)(void))completion {
     if (total) {
-        if (totalReplicationInprogress) return ;
-        else totalReplicationInprogress = smartReplicationInprogress = true;
+        if (self.totalReplicationInprogress) return ;
+        else self.totalReplicationInprogress = self.smartReplicationInprogress = true;
     } else {
-        if (smartReplicationInprogress) return ;
-        else smartReplicationInprogress = true;
+        if (self.smartReplicationInprogress) return ;
+        else self.smartReplicationInprogress = true;
     }
-    dispatch_async(waitingQueue, ^{
-        dispatch_group_wait(primaryInitializationGroup, DISPATCH_TIME_FOREVER);
+    dispatch_async(self.waitingQueue, ^{
+        dispatch_group_wait(self->primaryInitializationGroup, DISPATCH_TIME_FOREVER);
         if (self.ready) {
-            dispatch_group_wait(lockCloudGroup, DISPATCH_TIME_FOREVER);
-            dispatch_group_enter(lockCloudGroup);
+            dispatch_group_wait(self->lockCloudGroup, DISPATCH_TIME_FOREVER);
+            dispatch_group_enter(self->lockCloudGroup);
             [self reloadMappedRecordsTotal:total completion:^{
-                dispatch_group_leave(lockCloudGroup);
-                totalReplicationInprogress = smartReplicationInprogress = false;
+                dispatch_group_leave(self->lockCloudGroup);
+                self.totalReplicationInprogress = self.smartReplicationInprogress = false;
                 if (completion) completion();
                 [self resmart];
             }];
         } else {
-            totalReplicationInprogress = smartReplicationInprogress = false;
+            self.totalReplicationInprogress = self.smartReplicationInprogress = false;
             if (completion) completion();
             [self resmart];
         }
@@ -615,13 +619,13 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
     NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
     if (self.enabled) dispatch_async(dispatch_get_main_queue(), ^{
-        if (resmartTimer) {
-            [resmartTimer invalidate];
-            resmartTimer = nil;
+        if (self.resmartTimer) {
+            [self.resmartTimer invalidate];
+            self.resmartTimer = nil;
         }
-        resmartTimer = [NSTimer scheduledTimerWithTimeInterval:config.smartReplicationTimeout repeats:false block:^(NSTimer * _Nonnull timer) {
-            [resmartTimer invalidate];
-            resmartTimer = nil;
+        self.resmartTimer = [NSTimer scheduledTimerWithTimeInterval:self.config.smartReplicationTimeout repeats:false block:^(NSTimer * _Nonnull timer) {
+            [self.resmartTimer invalidate];
+            self.resmartTimer = nil;
             [self smartReplication];
         }];
     });
@@ -635,7 +639,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
     for (NSString *entityName in self.mapping.synchronizableEntities) {
         FetchRecordsArray fetchArrayBlock = ^(NSArray<__kindof CKRecord *> *records) {
             for (CKRecord *record in records) {
-                [_recievedUpdatedRecords addObject:record];
+                [self->_recievedUpdatedRecords addObject:record];
             }
             dispatch_group_leave(thisGroup);
         };
@@ -652,7 +656,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
         dispatch_group_leave(thisGroup);
     }];
     
-    dispatch_async(waitingQueue, ^{
+    dispatch_async(self.waitingQueue, ^{
         dispatch_group_wait(thisGroup, DISPATCH_TIME_FOREVER);
         [self performMergeAndCleanupIfNeeded];
         if (completion) completion();
@@ -660,10 +664,10 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
 }
 
 - (void)getCloudDeletionInfoCompletion:(void (^)(void))completion {
-    [self getRecordsOfEntityName:config.deletionInfoRecordType withPredicate:thisDevicePredicate fetch:^(NSArray<__kindof CKRecord *> *records) {
+    [self getRecordsOfEntityName:self.config.deletionInfoRecordType withPredicate:thisDevicePredicate fetch:^(NSArray<__kindof CKRecord *> *records) {
         for (CKRecord *record in records) {
-            [_recievedDeletionInfoRecords addObject:record];
-            [preparedToCloudRecords addRecordIDToDelete:record.recordID]; //cleanup
+            [self->_recievedDeletionInfoRecords addObject:record];
+            [self.preparedToCloudRecords addRecordIDToDelete:record.recordID]; //cleanup
         }
         if (completion) completion();
     }];
@@ -671,14 +675,14 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
 
 - (void)performMergeAndCleanupIfNeeded {
     if (_recievedUpdatedRecords.count + _recievedDeletionInfoRecords.count) {
-        [syncContext performMergeWithTransaction:[AKCloudTransaction transactionWithUpdatedRecords:self.recievedUpdatedRecords
+        [self.syncContext performMergeWithTransaction:[AKCloudTransaction transactionWithUpdatedRecords:self.recievedUpdatedRecords
                                                                                deletionInfoRecords:self.recievedDeletionInfoRecords
                                                                                            mapping:self.mapping
-                                                                                            config:config]];
+                                                                                            config:self.config]];
         [_recievedUpdatedRecords removeAllObjects];
         [_recievedDeletionInfoRecords removeAllObjects];
     }
-    if (preparedToCloudRecords.recordIDsToDelete) {
+    if (self.preparedToCloudRecords.recordIDsToDelete) {
         [self pushQueueWithSuccessBlock:^(BOOL success) {
 #ifdef DEBUG
             NSLog(@"[DEBUG] Cleanup DeletionInfo %@", success ? @"success" : @"failed");
@@ -745,14 +749,14 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
                 fetchNext.recordFetchedBlock = activeOperation.recordFetchedBlock;
                 fetchNext.queryCompletionBlock = activeOperation.queryCompletionBlock;
                 activeOperation = fetchNext;
-                [db addOperation:fetchNext];
+                [self.db addOperation:fetchNext];
             } else {
                 fetch(foundRecords.copy);
             }
         }
     };
     
-    [db addOperation:queryOperation];
+    [self.db addOperation:queryOperation];
 }
 
 
@@ -785,7 +789,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
     
     fetchOperation.queuePriority = NSOperationQueuePriorityVeryHigh;
     fetchOperation.qualityOfService = NSQualityOfServiceUserInteractive;
-    [db addOperation:fetchOperation];
+    [self.db addOperation:fetchOperation];
 }
 
 
@@ -801,13 +805,13 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
 //        NSLog(@"[DEBUG] %s entity %@ UUID %@", __PRETTY_FUNCTION__, syncObject.entityName, syncObject.uniqueData.UUIDString);
 //    }
 #endif
-    dispatch_group_enter(preparedToCloudRecords.lockGroup);
+    dispatch_group_enter(self.preparedToCloudRecords.lockGroup);
     CKRecordID *recordID = [CKRecordID recordIDWithUUIDString:syncObject.uniqueData.UUIDString];
     [self recordByRecordID:recordID fetch:^(CKRecord<AKMappedObject> *record, NSError * _Nullable error) {
         if (record) {
-            if (record[config.realModificationDateFieldName] && [record[config.realModificationDateFieldName] compare:syncObject.modificationDate] != NSOrderedAscending) {
-                NSLog(@"[WARNING] Cloud record %@ up to date %@", record.UUIDString, record[config.realModificationDateFieldName]);
-                dispatch_group_leave(preparedToCloudRecords.lockGroup);
+            if (record[self.config.realModificationDateFieldName] && [record[self.config.realModificationDateFieldName] compare:syncObject.modificationDate] != NSOrderedAscending) {
+                NSLog(@"[WARNING] Cloud record %@ up to date %@", record.UUIDString, record[self.config.realModificationDateFieldName]);
+                dispatch_group_leave(self.preparedToCloudRecords.lockGroup);
                 return ; // record update no needed
             }
         } else {
@@ -817,13 +821,13 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
             } else {
                 NSLog(@"[ERROR] recordByRecordID error: %@", error);
                 
-                dispatch_group_leave(preparedToCloudRecords.lockGroup);
+                dispatch_group_leave(self.preparedToCloudRecords.lockGroup);
                 if (successBlock) successBlock(false);
                 return ;
             }
         }
         record.keyedDataProperties = syncObject.keyedDataProperties;
-        record[config.realModificationDateFieldName] = syncObject.modificationDate;
+        record[self.config.realModificationDateFieldName] = syncObject.modificationDate;
         
         if ([syncObject conformsToProtocol:@protocol(AKRelatableToOne)]) {
             NSObject <AKRelatableToOne> *relatableObject = (NSObject <AKRelatableToOne> *)syncObject;
@@ -841,8 +845,8 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
             }
         }
         
-        [preparedToCloudRecords addRecordToSave:record];
-        dispatch_group_leave(preparedToCloudRecords.lockGroup);
+        [self.preparedToCloudRecords addRecordToSave:record];
+        dispatch_group_leave(self.preparedToCloudRecords.lockGroup);
         if (successBlock) successBlock(true);
     }];
 }
@@ -856,13 +860,13 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
     else NSLog(@"[DEBUG] %s %@", __PRETTY_FUNCTION__, description);
 #endif
     CKRecordID *recordID = [CKRecordID recordIDWithUUIDString:description.uniqueData.UUIDString];
-    [preparedToCloudRecords addRecordIDToDelete:recordID];
-    for (AKDevice *device in deviceList) {
-        CKRecord *deletionInfo = [CKRecord recordWithRecordType:config.deletionInfoRecordType];
-        deletionInfo[config.recordTypeFieldName] = self.mapping[description.entityName];
-        deletionInfo[config.recordIDFieldName] = description.uniqueData.UUIDString;
-        deletionInfo[config.deviceIDFieldName] = device.UUIDString;
-        [preparedToCloudRecords addRecordToSave:deletionInfo];
+    [self.preparedToCloudRecords addRecordIDToDelete:recordID];
+    for (AKDevice *device in self.deviceList) {
+        CKRecord *deletionInfo = [CKRecord recordWithRecordType:self.config.deletionInfoRecordType];
+        deletionInfo[self.config.recordTypeFieldName] = self.mapping[description.entityName];
+        deletionInfo[self.config.recordIDFieldName] = description.uniqueData.UUIDString;
+        deletionInfo[self.config.deviceIDFieldName] = device.UUIDString;
+        [self.preparedToCloudRecords addRecordToSave:deletionInfo];
     }
 }
 
@@ -870,35 +874,35 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
 #ifdef DEBUG
     NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
-    for (id<AKMappedObject> mappedObject in preparedToCloudRecords.failedEnqueueUpdateObjects) {
+    for (id<AKMappedObject> mappedObject in self.preparedToCloudRecords.failedEnqueueUpdateObjects) {
         [self enqueueUpdateWithMappedObject:mappedObject successBlock:^(BOOL success) {
             NSLog(@"[%@] retry enqueueUpdateWithMappedObject %@success", success ? @"INFO" : @"WARNING", success ? @"": @"un");
         }];
     }
     
-    dispatch_async(waitingQueue, ^{
-        dispatch_group_wait(preparedToCloudRecords.lockGroup, DISPATCH_TIME_FOREVER);
-        CKModifyRecordsOperation *mop = [[CKModifyRecordsOperation alloc] initWithRecordsToSave:preparedToCloudRecords.recordsToSave
-                                                                              recordIDsToDelete:preparedToCloudRecords.recordIDsToDelete];
+    dispatch_async(self.waitingQueue, ^{
+        dispatch_group_wait(self.preparedToCloudRecords.lockGroup, DISPATCH_TIME_FOREVER);
+        CKModifyRecordsOperation *mop = [[CKModifyRecordsOperation alloc] initWithRecordsToSave:self.preparedToCloudRecords.recordsToSave
+                                                                              recordIDsToDelete:self.preparedToCloudRecords.recordIDsToDelete];
         [mop setModifyRecordsCompletionBlock:^(NSArray<CKRecord *> * _Nullable savedRecords, NSArray<CKRecordID *> * _Nullable deletedRecordIDs, NSError * _Nullable operationError) {
             if (operationError) {
                 NSLog(@"[ERROR] CKModifyRecordsOperation Error: %@", operationError);
             }
-            if (savedRecords.count == preparedToCloudRecords.recordsToSave.count && deletedRecordIDs.count == preparedToCloudRecords.recordIDsToDelete.count) {
-                [preparedToCloudRecords clearAll];
+            if (savedRecords.count == self.preparedToCloudRecords.recordsToSave.count && deletedRecordIDs.count == self.preparedToCloudRecords.recordIDsToDelete.count) {
+                [self.preparedToCloudRecords clearAll];
                 [self savePreparedToCloudRecords];
                 if (successBlock) successBlock(true);
             } else {
-                [preparedToCloudRecords clearWithSavedRecords:savedRecords deletedRecordIDs:deletedRecordIDs];
+                [self.preparedToCloudRecords clearWithSavedRecords:savedRecords deletedRecordIDs:deletedRecordIDs];
                 [self savePreparedToCloudRecords];
-                if (self.enabled) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(config.tryToPushTimeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                    dispatch_async(waitingQueue, ^{
-                        dispatch_group_wait(preparedToCloudRecords.lockGroup, DISPATCH_TIME_FOREVER);
-                        dispatch_group_wait(lockCloudGroup, DISPATCH_TIME_FOREVER);
-                        if (preparedToCloudRecords.recordsToSave.count + preparedToCloudRecords.recordIDsToDelete.count) {
-                            dispatch_group_enter(lockCloudGroup);
+                if (self.enabled) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.config.tryToPushTimeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    dispatch_async(self.waitingQueue, ^{
+                        dispatch_group_wait(self.preparedToCloudRecords.lockGroup, DISPATCH_TIME_FOREVER);
+                        dispatch_group_wait(self->lockCloudGroup, DISPATCH_TIME_FOREVER);
+                        if (self.preparedToCloudRecords.recordsToSave.count + self.preparedToCloudRecords.recordIDsToDelete.count) {
+                            dispatch_group_enter(self->lockCloudGroup);
                             [self pushQueueWithSuccessBlock:^(BOOL success) {
-                                dispatch_group_leave(lockCloudGroup);
+                                dispatch_group_leave(self->lockCloudGroup);
                             }];
                         }
                     });
@@ -908,7 +912,7 @@ typedef void (^SaveSubscriptionCompletionHandler)(CKSubscription * _Nullable sub
         }];
         mop.queuePriority = NSOperationQueuePriorityVeryHigh;
         mop.qualityOfService = NSQualityOfServiceUserInteractive;
-        [db addOperation:mop];
+        [self.db addOperation:mop];
     });
     
 }

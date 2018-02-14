@@ -3,7 +3,7 @@
 //  AKDataSync
 //
 //  Created by anobisoft on 08/08/2017.
-//  Copyright (c) 2017 anobisoft. All rights reserved.
+//  Copyright © 2017 Anobisoft. All rights reserved.
 //
 
 @import UIKit;

@@ -28,23 +28,22 @@
 @end
 #if TARGET_OS_IOS
 @interface AKManagedObjectContext() <AKDataSyncContextPrivate, AKCloudManagerOwner>
-
-
+@property id<AKTransactionsAgregator> transactionsAgregator;
+@property NSManagedObjectContext *mainContext;
 @end
 #else
 @interface AKManagedObjectContext() <AKDataSyncContextPrivate>
-
+@property id<AKTransactionsAgregator> transactionsAgregator;
+@property NSManagedObjectContext *mainContext;
 @end
 #endif
 
 
 @implementation AKManagedObjectContext {
-    NSManagedObjectContext *mainContext;
     NSManagedObjectModel *managedObjectModel;
     NSPersistentStoreCoordinator *persistentStoreCoordinator;
     NSMutableArray <id<AKRepresentableTransaction>> *recievedTransactionsQueue;
     NSString *name;
-    id<AKTransactionsAgregator> transactionsAgregator;
 #if TARGET_OS_IOS
     AKCloudMapping *cloudMapping;
 #endif
@@ -94,7 +93,7 @@
 }
 
 - (void)setAgregator:(id<AKTransactionsAgregator>)agregator {
-    transactionsAgregator = agregator;
+    self.transactionsAgregator = agregator;
 }
 
 #pragma mark - cloud support
@@ -199,7 +198,7 @@ BOOL totalReplicationInProgress;
 
 - (void)performTotalReplication {
     
-    if (!totalReplicationInProgress && transactionsAgregator) {
+    if (!totalReplicationInProgress && self.transactionsAgregator) {
         totalReplicationInProgress = true;
         [self performBlock:^{
             AKRepresentableTransaction *transaction = [AKRepresentableTransaction instantiateWithContext:self];
@@ -221,7 +220,7 @@ BOOL totalReplicationInProgress;
                 }
             }
 #endif
-            [transactionsAgregator context:self willCommitTransaction:transaction];
+            [self.transactionsAgregator context:self willCommitTransaction:transaction];
 #if TARGET_OS_IOS
             [self cloudTotalReplication:^{
                 totalReplicationInProgress = false;
@@ -408,7 +407,7 @@ BOOL totalReplicationInProgress;
         NSLog(@"[DEBUG] %s", __PRETTY_FUNCTION__);
 #endif
         NSError *error;
-        if (![mainContext save:&error]) {
+        if (![self.mainContext save:&error]) {
             if (error) NSLog(@"[ERROR] %s %@\n%@", __PRETTY_FUNCTION__, error.localizedDescription, error.userInfo);
         }
         
@@ -443,7 +442,7 @@ BOOL totalReplicationInProgress;
 - (void)commit {
     if ([self hasChanges]) {        
         [self performBlock:^{
-            if (transactionsAgregator) [transactionsAgregator context:self willCommitTransaction:[AKRepresentableTransaction instantiateWithContext:self]];
+            if (self.transactionsAgregator) [self.transactionsAgregator context:self willCommitTransaction:[AKRepresentableTransaction instantiateWithContext:self]];
             NSError *error;
             if ([self save:&error]) {
                 [self saveMainContext];
@@ -500,10 +499,6 @@ BOOL totalReplicationInProgress;
     return self;
 }
 
-+ (instancetype)new {
-    return [self defaultContext];
-}
-
 + (void)initialize {
     [super initialize];
 }
@@ -532,7 +527,7 @@ BOOL totalReplicationInProgress;
 
 - (instancetype)initWithStoreURL:(NSURL *)storeURL modelURL:(NSURL *)modelURL {
     if (self = [super initWithConcurrencyType:NSPrivateQueueConcurrencyType]) {
-        mainContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
+        self.mainContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
         NSString *idModelPart = @"DefaultModel ";
         if (modelURL) {
             idModelPart = [NSString stringWithFormat:@"Model %@ ", [modelURL.absoluteString componentsSeparatedByString:@"/"].lastObject];
@@ -548,8 +543,8 @@ BOOL totalReplicationInProgress;
         if (![persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:autoMigration error:&error]) {
             if (error) NSLog(@"[ERROR] %s %@\n%@", __PRETTY_FUNCTION__, error.localizedDescription, error.userInfo);
         }
-        [mainContext setPersistentStoreCoordinator:persistentStoreCoordinator];
-        self.parentContext = mainContext;
+        [self.mainContext setPersistentStoreCoordinator:persistentStoreCoordinator];
+        self.parentContext = self.mainContext;
         
         recievedTransactionsQueue = [NSMutableArray new];
     }

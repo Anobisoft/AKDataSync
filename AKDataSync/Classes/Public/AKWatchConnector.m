@@ -15,12 +15,12 @@
 
 @interface AKWatchConnector() <AKWatchConnector>
 @property (nonatomic, weak) id<AKWatchTransactionsAgregator> agregator;
+@property NSMutableArray <NSDictionary *> *userInfoQueue;
+@property dispatch_semaphore_t sessionActivationSemaphore;
+@property NSTimer *logTimer;
 @end
 
 @implementation AKWatchConnector {
-    dispatch_semaphore_t sessionActivationSemaphore;
-    NSTimer *logTimer;
-    NSMutableArray <NSDictionary *> *userInfoQueue;
 
 }
 
@@ -33,9 +33,9 @@
 
 - (instancetype)init {
 	if (WCSession.isSupported && (self = [super init])) {
-        sessionActivationSemaphore = dispatch_semaphore_create(0);
-        userInfoQueue = [[NSUserDefaults standardUserDefaults] objectForKey:@"AKWatchConnector.userInfoQueue"];
-        if (!userInfoQueue) userInfoQueue = [NSMutableArray new];
+        self.sessionActivationSemaphore = dispatch_semaphore_create(0);
+        self.userInfoQueue = [[NSUserDefaults standardUserDefaults] objectForKey:@"AKWatchConnector.userInfoQueue"];
+        if (!self.userInfoQueue) self.userInfoQueue = [NSMutableArray new];
 	} else {
 		NSLog(@"[ERROR] %s WCSession not supported", __PRETTY_FUNCTION__);
 	}
@@ -43,17 +43,17 @@
 }
 
 - (void)enqueueUserInfo:(NSDictionary *)userInfo {
-    [userInfoQueue addObject:userInfo];
-    [[NSUserDefaults standardUserDefaults] setObject:userInfoQueue forKey:@"AKWatchConnector.userInfoQueue"];
+    [self.userInfoQueue addObject:userInfo];
+    [[NSUserDefaults standardUserDefaults] setObject:self.userInfoQueue forKey:@"AKWatchConnector.userInfoQueue"];
 }
 
 - (void)dequeue {
     if (self.ready) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            for (NSDictionary *userInfo in userInfoQueue) {
+            for (NSDictionary *userInfo in self.userInfoQueue) {
                 [WCSession.defaultSession transferUserInfo:userInfo];
             }
-            [userInfoQueue removeAllObjects];
+            [self.userInfoQueue removeAllObjects];
         });
     }
 }
@@ -70,7 +70,7 @@
     WCSession.defaultSession.delegate = self;
     if (!(sessionActivated = WCSession.defaultSession.activationState == WCSessionActivationStateActivated)) {
         [WCSession.defaultSession activateSession];
-        dispatch_semaphore_wait(sessionActivationSemaphore, DISPATCH_TIME_FOREVER);
+        dispatch_semaphore_wait(self.sessionActivationSemaphore, DISPATCH_TIME_FOREVER);
     }
     if (self.ready) {
         NSError *error = nil;
@@ -84,7 +84,7 @@
 
 - (void)session:(WCSession *)session activationDidCompleteWithState:(WCSessionActivationState)activationState error:(NSError *)error {
     sessionActivated = activationState == WCSessionActivationStateActivated;
-    dispatch_semaphore_signal(sessionActivationSemaphore);
+    dispatch_semaphore_signal(self.sessionActivationSemaphore);
     switch (activationState) {
         case WCSessionActivationStateInactive:
             NSLog(@"[ERROR] WCSession activationDidCompleteWithState: WCSessionActivationStateInactive");
@@ -174,8 +174,8 @@
 #ifdef DEBUG
     else NSLog(@"[DEBUG] %s %@ success", __PRETTY_FUNCTION__, userInfoTransfer);
     dispatch_async(dispatch_get_main_queue(), ^{
-        [logTimer invalidate];
-        logTimer = [NSTimer scheduledTimerWithTimeInterval:1.0f target:self selector:@selector(logOutstandingUserInfoTransfers) userInfo:nil repeats:true];
+        [self.logTimer invalidate];
+        self.logTimer = [NSTimer scheduledTimerWithTimeInterval:1.0f target:self selector:@selector(logOutstandingUserInfoTransfers) userInfo:nil repeats:true];
     });
 #endif
     if (self.delegate && [self.delegate respondsToSelector:@selector(watchConnector:didFinishUserInfoTransfer:error:)]) {
@@ -189,7 +189,7 @@
         NSLog(@"[NOTICE] WCSession.outstandingUserInfoTransfers: %@", WCSession.defaultSession.outstandingUserInfoTransfers);
     } else {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [logTimer invalidate];
+            [self.logTimer invalidate];
         });
     }
 }

@@ -2,8 +2,8 @@
 //  AKDataSyncTests.m
 //  AKDataSyncTests
 //
-//  Created by anobisoft on 08/08/2017.
-//  Copyright (c) 2017 anobisoft. All rights reserved.
+//  Created by Stanislav Pletnev on 2017-08-08
+//  Copyright © 2017 Anobisoft. All rights reserved.
 //
 
 @import XCTest;

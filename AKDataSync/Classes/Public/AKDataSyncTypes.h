@@ -1,9 +1,9 @@
 //
 //  AKDataSyncTypes.h
-//  Pods
+//  AKDataSync
 //
 //  Created by Stanislav Pletnev on 22.08.17.
-//
+//  Copyright © 2016 Anobisoft. All rights reserved.
 //
 
 #ifndef AKDataSyncTypes_h

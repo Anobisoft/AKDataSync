@@ -1,9 +1,9 @@
 //
 //  AKCloudConfig.h
-//  Pods
+//  AKDataSync
 //
 //  Created by Stanislav Pletnev on 28.08.17.
-//
+//  Copyright © 2017 Anobisoft. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
