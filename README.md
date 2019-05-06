@@ -2,7 +2,6 @@
 
 [![CI Status](http://img.shields.io/travis/Anobisoft/AKDataSync.svg?style=flat)](https://travis-ci.org/Anobisoft/AKDataSync)
 [![Version](https://img.shields.io/cocoapods/v/AKDataSync.svg?style=flat)](http://cocoapods.org/pods/AKDataSync)
-[![Downloads](https://img.shields.io/cocoapods/dt/AKDataSync.svg)](http://cocoapods.org/pods/AKDataSync)
 [![Platform](https://img.shields.io/cocoapods/p/AKDataSync.svg?style=flat)](http://cocoapods.org/pods/AKDataSync)
 [![Language](https://img.shields.io/github/languages/top/Anobisoft/AKDataSync.svg)](https://github.com/Anobisoft/AKDataSync)
 [![License](https://img.shields.io/cocoapods/l/AKDataSync.svg?style=flat)](http://cocoapods.org/pods/AKDataSync)
